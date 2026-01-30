@@ -18,15 +18,14 @@ const AllQuizzes = () => {
         try {
             setLoading(true);
             
-            // تم تعديل المسار ليتوافق مع هيكلية الراوتر في الباك إند الخاص بك
-            // إذا كان هناك معرف كورس نطلب اختبارات الكورس، وإلا نطلب الكل
+            
             const url = courseId 
                 ? `/quizzes/admin/courses/${courseId}/quizzes` 
                 : '/quizzes/admin/quizzes/all'; 
 
             const res = await api.get(url);
             
-            // معالجة مرنة لاستقبال البيانات سواء كانت مصفوفة مباشرة أو داخل كائن
+           
             if (Array.isArray(res.data)) {
                 setQuizzes(res.data);
             } else if (res.data.quizzes) {
