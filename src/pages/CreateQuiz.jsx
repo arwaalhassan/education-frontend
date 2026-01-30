@@ -23,7 +23,7 @@ const CreateQuiz = () => {
         if (isEditMode) {
             const fetchQuizData = async () => {
                 try {
-                    // تم تعديل المسار ليطابق الـ Backend المحدث
+                   
                     const res = await api.get(`/quizzes/admin/quizzes/${quizId}/details`);
                     setQuizData({ 
                         title: res.data.title, 
@@ -79,8 +79,7 @@ const CreateQuiz = () => {
         setIsSaving(true);
         try {
             if (isEditMode) {
-                // --- منطق التعديل ---
-                // 1. تحديث بيانات الاختبار الأساسية (العنوان والمدة)
+             
                 await api.put(`/quizzes/admin/${quizId}`, {
                     title: quizData.title,
                     duration: parseInt(quizData.duration)
