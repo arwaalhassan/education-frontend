@@ -8,7 +8,7 @@ import MyCourses from './pages/MyCourses';
 import UsersManagement from './pages/UsersManagement';
 import StudentManagement from './pages/StudentManagement';
 import CreateQuiz from './pages/CreateQuiz';
-import AllQuizzes from './pages/AllQuizzes'; // <--- تأكد من استيراد هذه الصفحة
+import AllQuizzes from './pages/AllQuizzes'; 
 import Login from './pages/Login';
 import Reports from './pages/Reports';
 import AnnouncementsManager from './pages/AnnouncementsManager';
