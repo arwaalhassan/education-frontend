@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://education-scj0.onrender.com/api', // تأكد من رقم البورت الخاص بسيرفر Node.js
+  baseURL: 'https://education-scj0.onrender.com/api', 
 });
 
 // إضافة التوكن تلقائياً لكل الطلبات بعد تسجيل الدخول
