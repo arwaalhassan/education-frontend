@@ -16,7 +16,7 @@ const AddCourse = () => {
     title: '', 
     description: '', 
     branch: 'scientific', 
-    price: '' // تركناه فارغاً ليتم إدخاله
+    price: '' 
   });
 
   useEffect(() => {
@@ -49,13 +49,13 @@ const AddCourse = () => {
 
     const user = JSON.parse(localStorage.getItem('user'));
     
-    // بناء الطلب بدقة كما يتوقعه السيرفر
+    
     const payload = {
       title: courseData.title,
       description: courseData.description || "",
       branch: courseData.branch,
       price: Number(courseData.price),
-      instructor_id: user?.id // هذا الحقل غالباً ما يسبب الـ 400 إذا كان ناقصاً
+      instructor_id: user?.id 
     };
 
     try {
