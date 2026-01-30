@@ -39,7 +39,7 @@ const AnnouncementsManager = () => {
         if (imageFile) formData.append('image', imageFile);
 
         try {
-            // ملاحظة: تأكد أن هذا المسار معرف في الباك-إند لاستقبال FormData
+          
             await api.post('/admin/announcements', formData, {
                 headers: { 'Content-Type': 'multipart/form-data' }
             });
