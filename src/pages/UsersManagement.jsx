@@ -6,7 +6,14 @@ const UsersControl = () => {
     const [users, setUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
-
+// حالات إضافة مستخدم جديد
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [newUser, setNewUser] = useState({
+        username: '',
+        email: '',
+        password: '',
+        role: ''
+    });
     // 1. جلب المستخدمين (دالة getUsers)
     const fetchUsers = async () => {
         try {
@@ -45,8 +52,27 @@ const UsersControl = () => {
             alert("تم تحديث الرتبة");
         } catch (err) { alert("خطأ في التحديث"); }
     };
-
-    // 4. منح وصول يدوي لكورس (دالة grantManualAccess)
+// 4. إضافة مستخدم جديد للسيرفر
+    const handleAddUser = async (e) => {
+        e.preventDefault();
+        try {
+            const res = await api.post('/admin/users', newUser);
+            // تحديث القائمة فوراً بالمستخدم الجديد
+            // ملاحظة: السيرفر يرجع userId، نحتاج لدمجه مع البيانات للعرض
+            const addedUser = { 
+                id: res.data.userId, 
+                ...newUser, 
+                is_active: 1 
+            };
+            setUsers([addedUser, ...users]);
+            setShowAddModal(false); // إغلاق النافذة
+            setNewUser({ username: '', email: '', password: '', role: 'student' }); // تصفير النموذج
+            alert("تم إضافة المستخدم بنجاح");
+        } catch (err) {
+            alert(err.response?.data?.message || "خطأ في إضافة المستخدم");
+        }
+    };
+    // 5. منح وصول يدوي لكورس (دالة grantManualAccess)
     const handleManualAccess = async (userId) => {
         const courseId = prompt("أدخل رقم الكورس (Course ID):");
         if (!courseId) return;
@@ -77,6 +103,12 @@ const UsersControl = () => {
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
+                <button 
+                        onClick={() => setShowAddModal(true)}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
+                    >
+                        <UserPlus size={18} /> إضافة مستخدم
+                    </button>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -134,6 +166,85 @@ const UsersControl = () => {
                 </table>
             </div>
         </div>
+        {/* Add User Modal نافذة إضافة مستخدم */}
+            {showAddModal && (
+                <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+                        <div className="flex justify-between items-center p-6 border-b">
+                            <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
+                                <UserPlus className="text-blue-600" /> إضافة مستخدم جديد
+                            </h2>
+                            <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                                <X size={24} />
+                            </button>
+                        </div>
+                        
+                        <form onSubmit={handleAddUser} className="p-6 space-y-4">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
+                                <input 
+                                    type="text" required
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    placeholder="مثال: ahmad_dev"
+                                    value={newUser.username}
+                                    onChange={(e) => setNewUser({...newUser, username: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
+                                <input 
+                                    type="email" required
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    placeholder="example@mail.com"
+                                    value={newUser.email}
+                                    onChange={(e) => setNewUser({...newUser, email: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
+                                <input 
+                                    type="password" required minLength="6"
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    placeholder="******"
+                                    value={newUser.password}
+                                    onChange={(e) => setNewUser({...newUser, password: e.target.value})}
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">الرتبة (الصلاحيات)</label>
+                                <select 
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white"
+                                    value={newUser.role}
+                                    onChange={(e) => setNewUser({...newUser, role: e.target.value})}
+                                >
+                                    <option value="student">طالب (Student)</option>
+                                    <option value="teacher">أستاذ (Teacher)</option>
+                                    <option value="admin">مدير (Admin)</option>
+                                </select>
+                            </div>
+                            
+                            <div className="flex gap-3 pt-4">
+                                <button 
+                                    type="submit" 
+                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors"
+                                >
+                                    تأكيد الإضافة
+                                </button>
+                                <button 
+                                    type="button"
+                                    onClick={() => setShowAddModal(false)}
+                                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-lg transition-colors"
+                                >
+                                    إلغاء
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
     );
 };
 
