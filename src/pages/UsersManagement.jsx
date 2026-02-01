@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import api from '../services/api'; // ملف الـ axios الذي جهزناه
-import { Users, Shield, UserMinus, UserCheck, CreditCard, Search } from 'lucide-react';
+import api from '../services/api'; 
+import { Users, Shield, UserMinus, UserCheck, CreditCard, Search, UserPlus, X } from 'lucide-react';
 
 const UsersControl = () => {
     const [users, setUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
-// حالات إضافة مستخدم جديد
     const [showAddModal, setShowAddModal] = useState(false);
     const [newUser, setNewUser] = useState({
         username: '',
         email: '',
         password: '',
-        role: ''
+        role: 'student' 
     });
-    // 1. جلب المستخدمين (دالة getUsers)
+
     const fetchUsers = async () => {
         try {
             const res = await api.get('/admin/users');
@@ -28,23 +27,17 @@ const UsersControl = () => {
 
     useEffect(() => { fetchUsers(); }, []);
 
-    // 2. تفعيل/تعطيل الحساب (دالة updateUserStatus)
-    const handleToggleStatus = async (id, currentStatus) => {
-    try {
-        // نرسل طلباً فارغاً لأن الباك إند يقوم بالتبديل تلقائياً
-        const response = await api.patch(`/admin/users/${id}/status`);
-        
-        // نحدث الحالة في الواجهة بناءً على ما رجع من السيرفر (is_active الجديد)
-        const newStatus = response.data.is_active;
-        setUsers(users.map(u => u.id === id ? { ...u, is_active: newStatus } : u));
-        
-    } catch (err) { 
-        console.error(err);
-        alert("فشلت عملية تحديث الحالة"); 
-    }
-};
+    const handleToggleStatus = async (id) => {
+        try {
+            const response = await api.patch(`/admin/users/${id}/status`);
+            const newStatus = response.data.is_active;
+            setUsers(users.map(u => u.id === id ? { ...u, is_active: newStatus } : u));
+        } catch (err) { 
+            console.error(err);
+            alert("فشلت عملية تحديث الحالة"); 
+        }
+    };
 
-    // 3. تغيير الرتبة (دالة updateUserRole)
     const handleChangeRole = async (id, newRole) => {
         try {
             await api.put(`/admin/users/${id}/role`, { role: newRole });
@@ -52,27 +45,25 @@ const UsersControl = () => {
             alert("تم تحديث الرتبة");
         } catch (err) { alert("خطأ في التحديث"); }
     };
-// 4. إضافة مستخدم جديد للسيرفر
+
     const handleAddUser = async (e) => {
         e.preventDefault();
         try {
             const res = await api.post('/admin/users', newUser);
-            // تحديث القائمة فوراً بالمستخدم الجديد
-            // ملاحظة: السيرفر يرجع userId، نحتاج لدمجه مع البيانات للعرض
             const addedUser = { 
                 id: res.data.userId, 
                 ...newUser, 
                 is_active: 1 
             };
             setUsers([addedUser, ...users]);
-            setShowAddModal(false); // إغلاق النافذة
-            setNewUser({ username: '', email: '', password: '', role: 'student' }); // تصفير النموذج
+            setShowAddModal(false);
+            setNewUser({ username: '', email: '', password: '', role: 'student' });
             alert("تم إضافة المستخدم بنجاح");
         } catch (err) {
             alert(err.response?.data?.message || "خطأ في إضافة المستخدم");
         }
     };
-    // 5. منح وصول يدوي لكورس (دالة grantManualAccess)
+
     const handleManualAccess = async (userId) => {
         const courseId = prompt("أدخل رقم الكورس (Course ID):");
         if (!courseId) return;
@@ -83,8 +74,8 @@ const UsersControl = () => {
     };
 
     const filteredUsers = users.filter(u => 
-        u.username.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        u.email.toLowerCase().includes(searchTerm.toLowerCase())
+        (u.username?.toLowerCase() || "").includes(searchTerm.toLowerCase()) || 
+        (u.email?.toLowerCase() || "").includes(searchTerm.toLowerCase())
     );
 
     if (loading) return <div className="p-10 text-center">جاري التحميل...</div>;
@@ -95,20 +86,22 @@ const UsersControl = () => {
                 <h1 className="text-2xl font-bold flex items-center gap-2">
                     <Users className="text-blue-600" /> إدارة المستخدمين
                 </h1>
-                <div className="relative w-64">
-                    <Search className="absolute right-3 top-2.5 text-gray-400" size={18} />
-                    <input 
-                        type="text" placeholder="بحث بالاسم أو الإيميل..." 
-                        className="w-full pr-10 pl-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                    />
-                </div>
-                <button 
+                <div className="flex gap-4">
+                    <div className="relative w-64">
+                        <Search className="absolute right-3 top-2.5 text-gray-400" size={18} />
+                        <input 
+                            type="text" placeholder="بحث بالاسم أو الإيميل..." 
+                            className="w-full pr-10 pl-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                        />
+                    </div>
+                    <button 
                         onClick={() => setShowAddModal(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors whitespace-nowrap"
                     >
                         <UserPlus size={18} /> إضافة مستخدم
                     </button>
+                </div>
             </div>
 
             <div className="bg-white rounded-xl shadow-sm overflow-hidden">
@@ -146,7 +139,7 @@ const UsersControl = () => {
                                 </td>
                                 <td className="p-4 flex gap-2">
                                     <button 
-                                        onClick={() => handleToggleStatus(user.id, user.is_active)}
+                                        onClick={() => handleToggleStatus(user.id)}
                                         className={`p-2 rounded-lg transition ${user.is_active ? 'text-orange-600 hover:bg-orange-50' : 'text-green-600 hover:bg-green-50'}`}
                                         title={user.is_active ? "تعطيل" : "تفعيل"}
                                     >
@@ -165,16 +158,15 @@ const UsersControl = () => {
                     </tbody>
                 </table>
             </div>
-        </div>
-        {/* Add User Modal نافذة إضافة مستخدم */}
+
             {showAddModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex justify-center items-center z-50 p-4">
-                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl animate-in fade-in zoom-in duration-200">
+                    <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl">
                         <div className="flex justify-between items-center p-6 border-b">
                             <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
                                 <UserPlus className="text-blue-600" /> إضافة مستخدم جديد
                             </h2>
-                            <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600 transition-colors">
+                            <button onClick={() => setShowAddModal(false)} className="text-gray-400 hover:text-gray-600">
                                 <X size={24} />
                             </button>
                         </div>
@@ -184,7 +176,7 @@ const UsersControl = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">اسم المستخدم</label>
                                 <input 
                                     type="text" required
-                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="مثال: ahmad_dev"
                                     value={newUser.username}
                                     onChange={(e) => setNewUser({...newUser, username: e.target.value})}
@@ -194,7 +186,7 @@ const UsersControl = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">البريد الإلكتروني</label>
                                 <input 
                                     type="email" required
-                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="example@mail.com"
                                     value={newUser.email}
                                     onChange={(e) => setNewUser({...newUser, email: e.target.value})}
@@ -204,37 +196,30 @@ const UsersControl = () => {
                                 <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
                                 <input 
                                     type="password" required minLength="6"
-                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
                                     placeholder="******"
                                     value={newUser.password}
                                     onChange={(e) => setNewUser({...newUser, password: e.target.value})}
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">الرتبة (الصلاحيات)</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">الرتبة</label>
                                 <select 
-                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition-all bg-white"
+                                    className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                                     value={newUser.role}
                                     onChange={(e) => setNewUser({...newUser, role: e.target.value})}
                                 >
-                                    <option value="student">طالب (Student)</option>
-                                    <option value="teacher">أستاذ (Teacher)</option>
-                                    <option value="admin">مدير (Admin)</option>
+                                    <option value="student">طالب</option>
+                                    <option value="teacher">أستاذ</option>
+                                    <option value="admin">مدير</option>
                                 </select>
                             </div>
                             
                             <div className="flex gap-3 pt-4">
-                                <button 
-                                    type="submit" 
-                                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 rounded-lg transition-colors"
-                                >
+                                <button type="submit" className="flex-1 bg-blue-600 text-white font-bold py-2 rounded-lg hover:bg-blue-700 transition">
                                     تأكيد الإضافة
                                 </button>
-                                <button 
-                                    type="button"
-                                    onClick={() => setShowAddModal(false)}
-                                    className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold py-2 rounded-lg transition-colors"
-                                >
+                                <button type="button" onClick={() => setShowAddModal(false)} className="flex-1 bg-gray-100 text-gray-700 font-bold py-2 rounded-lg hover:bg-gray-200 transition">
                                     إلغاء
                                 </button>
                             </div>
@@ -243,8 +228,6 @@ const UsersControl = () => {
                 </div>
             )}
         </div>
-    );
-};
     );
 };
 
