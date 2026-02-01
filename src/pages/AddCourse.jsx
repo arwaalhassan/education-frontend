@@ -134,7 +134,7 @@ const AddCourse = () => {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-bold mb-1 mr-1">السعر (SP) *</label>
+                <label className="block text-sm font-bold mb-1 mr-1">السعر ($) *</label>
                 <input 
                   type="number" 
                   className="w-full p-3 border rounded-xl outline-none"
