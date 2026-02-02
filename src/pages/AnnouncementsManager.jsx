@@ -141,41 +141,48 @@ const AnnouncementsManager = () => {
             )}
 
             {/* عرض الإعلانات (Grid) */}
-            {announcements.length === 0 ? (
-                <div className="bg-white p-20 text-center rounded-3xl border-2 border-dashed border-gray-100 mt-10">
-                    <Megaphone size={60} className="mx-auto text-gray-200 mb-4" />
-                    <p className="text-gray-400 font-medium italic">لا توجد إعلانات منشورة حالياً..</p>
+{announcements.length === 0 ? (
+    <div className="bg-white p-20 text-center rounded-3xl border-2 border-dashed border-gray-100 mt-10">
+        <Megaphone size={60} className="mx-auto text-gray-200 mb-4" />
+        <p className="text-gray-400 font-medium italic">لا توجد إعلانات منشورة حالياً..</p>
+    </div>
+) : (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {announcements.map((ann) => (
+            <div key={ann.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
+                <div className="h-44 bg-gray-100 relative overflow-hidden">
+                    {ann.imageUrl ? (
+                        <img 
+                            src={getSafeImageUrl(ann.imageUrl)} 
+                            alt="إعلان" 
+                            // أضف السطر التالي لحل مشكلة OpaqueResponseBlocking
+                            crossOrigin="anonymous"
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                        />
+                    ) : (
+                        <div className="flex items-center justify-center h-full text-gray-300 bg-gray-50"><ImageIcon size={40} /></div>
+                    )}
+                    <div className="absolute top-3 left-3 flex gap-2">
+                        <button 
+                            onClick={() => handleDelete(ann.id)}
+                            className="p-2 bg-white/90 backdrop-blur text-red-500 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition"
+                        ><Trash2 size={16} /></button>
+                    </div>
                 </div>
-            ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {announcements.map((ann) => (
-                        <div key={ann.id} className="bg-white rounded-3xl overflow-hidden shadow-sm border border-gray-100 flex flex-col hover:shadow-xl hover:-translate-y-1 transition-all duration-300 group">
-                            <div className="h-44 bg-gray-100 relative overflow-hidden">
-                                {ann.imageUrl ? (
-                                    <img src={ann.imageUrl} alt="إعلان" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                ) : (
-                                    <div className="flex items-center justify-center h-full text-gray-300 bg-gray-50"><ImageIcon size={40} /></div>
-                                )}
-                                <div className="absolute top-3 left-3 flex gap-2">
-                                    <button 
-                                        onClick={() => handleDelete(ann.id)}
-                                        className="p-2 bg-white/90 backdrop-blur text-red-500 rounded-full shadow-lg hover:bg-red-500 hover:text-white transition"
-                                    ><Trash2 size={16} /></button>
-                                </div>
-                            </div>
 
-                            <div className="p-5 flex-1 flex flex-col">
-                                <div className="flex items-center gap-2 text-[10px] font-bold text-orange-500 uppercase tracking-wider mb-3 bg-orange-50 w-fit px-3 py-1 rounded-full">
-                                    <Calendar size={12} />
-                                    <span>{new Date(ann.created_at).toLocaleDateString('ar-SA')}</span>
-                                </div>
-                                <p className="text-gray-600 leading-relaxed mb-4 line-clamp-3 text-sm flex-1 font-medium">
-                                    {ann.content}
-                                </p>
-                            </div>
-                        </div>
-                    ))}
+                <div className="p-5 flex-1 flex flex-col">
+                    <div className="flex items-center gap-2 text-[10px] font-bold text-orange-500 uppercase tracking-wider mb-3 bg-orange-50 w-fit px-3 py-1 rounded-full">
+                        <Calendar size={12} />
+                        <span>{new Date(ann.created_at).toLocaleDateString('ar-SA')}</span>
+                    </div>
+                    <p className="text-gray-600 leading-relaxed mb-4 line-clamp-3 text-sm flex-1 font-medium">
+                        {ann.content}
+                    </p>
                 </div>
+            </div>
+        ))}
+    </div>
+
             )}
         </div>
     );
