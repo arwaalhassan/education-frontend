@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { arabicFontBase64 } from '../assets/fonts/arabicFont';
 
 const Reports = () => {
   const [reportData, setReportData] = useState(null);
@@ -29,37 +30,38 @@ const Reports = () => {
     if (!reportData) return;
     
     const doc = new jsPDF();
+
+    // 1. تسجيل الخط العربي في jsPDF
+    doc.addFileToVFS("ArabicFont.ttf", arabicFontBase64);
+    doc.addFont("ArabicFont.ttf", "ArabicFont", "normal");
+    
+    // 2. تفعيل الخط لاستخدامه
+    doc.setFont("ArabicFont");
+
     doc.setFontSize(20);
-    doc.text("Platform Performance Report", 105, 15, { align: "center" });
+    // لإظهار النص العربي بشكل صحيح نحتاج أحياناً لاستخدام دالة تقليب النصوص (Reverse) 
+    // لأن PDF يكتب من اليسار لليمين افتراضياً
+    doc.text("تقرير أداء المنصة", 105, 15, { align: "right" });
     
     doc.setFontSize(12);
-    doc.text(`Total Earnings: ${reportData.summary?.totalEarnings || 0} $`, 20, 30);
-    doc.text(`Total Students: ${reportData.summary?.totalStudents || 0}`, 20, 40);
+    doc.text(`إجمالي الأرباح: ${reportData.summary?.totalEarnings || 0} $`, 180, 30, { align: "right" });
 
-    // جدول الكورسات
+    // 3. تعديل جداول autotable لدعم الخط العربي
     if (reportData.topCourses?.length > 0) {
         autoTable(doc, {
-            head: [['Course Name', 'Sales Count']],
+            head: [['اسم المقرر', 'عدد المبيعات']],
             body: reportData.topCourses.map(c => [c.title, c.sales_count]),
             startY: 50,
-            theme: 'grid',
+            styles: { 
+                font: "ArabicFont", // تحديد الخط العربي هنا
+                halign: 'right'     // محاذاة النص لليمين
+            },
             headStyles: { fillColor: [41, 128, 185] }
         });
     }
 
-    // جدول أداء الاختبارات
-    if (reportData.quizPerformance?.length > 0) {
-        autoTable(doc, {
-            head: [['Quiz Title', 'Average Score']],
-            body: reportData.quizPerformance.map(q => [q.quiz_title, `${Math.round(q.average_score)}%`]),
-            startY: doc.lastAutoTable ? doc.lastAutoTable.finalY + 10 : 100,
-            theme: 'striped',
-            headStyles: { fillColor: [142, 68, 173] }
-        });
-    }
-
     doc.save(`Admin_Report_${new Date().toLocaleDateString()}.pdf`);
-  };
+};
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
