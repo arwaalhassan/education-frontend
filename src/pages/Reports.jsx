@@ -35,37 +35,46 @@ const fixArabicText = (text) => {
     
     const doc = new jsPDF();
 
-    // 1. تسجيل الخط العربي في jsPDF
+    // تسجيل الخط
     doc.addFileToVFS("ArabicFont.ttf", arabicFontBase64);
     doc.addFont("ArabicFont.ttf", "ArabicFont", "normal");
     
-    // 2. تفعيل الخط لاستخدامه
+    // تفعيل الخط للنصوص العادية
     doc.setFont("ArabicFont");
 
+    // العنوان (استخدام الدالة المساعدة)
     doc.setFontSize(20);
-    // لإظهار النص العربي بشكل صحيح نحتاج أحياناً لاستخدام دالة تقليب النصوص (Reverse) 
-    // لأن PDF يكتب من اليسار لليمين افتراضياً
-    doc.text("تقرير أداء المنصة", 105, 15, { align: "right" });
+    doc.text(fixArabicText("تقرير أداء المنصة"), 190, 15, { align: "right" });
     
     doc.setFontSize(12);
-    doc.text(`إجمالي الأرباح: ${reportData.summary?.totalEarnings || 0} $`, 180, 30, { align: "right" });
+    doc.text(`${fixArabicText("إجمالي الأرباح")}: ${reportData.summary?.totalEarnings || 0} $`, 190, 30, { align: "right" });
 
-    // 3. تعديل جداول autotable لدعم الخط العربي
+    // تعديل الجدول
     if (reportData.topCourses?.length > 0) {
         autoTable(doc, {
-            head: [['اسم المقرر', 'عدد المبيعات']],
-            body: reportData.topCourses.map(c => [c.title, c.sales_count]),
+            // معالجة نصوص العناوين
+            head: [[fixArabicText('اسم المقرر'), fixArabicText('عدد المبيعات')]],
+            // معالجة نصوص البيانات داخل الجدول
+            body: reportData.topCourses.map(c => [
+              fixArabicText(c.title), 
+              c.sales_count
+            ]),
             startY: 50,
             styles: { 
-                font: "ArabicFont", // تحديد الخط العربي هنا
-                halign: 'right'     // محاذاة النص لليمين
+                font: "ArabicFont", 
+                halign: 'right', // محاذاة لليمين داخل الخلايا
             },
-            headStyles: { fillColor: [41, 128, 185] }
+            headStyles: { 
+              fillColor: [41, 128, 185],
+              font: "ArabicFont" 
+            },
+            // هام جداً: التأكد من أن اللغة هي العربية في الإعدادات
+            theme: 'grid'
         });
     }
 
     doc.save(`Admin_Report_${new Date().toLocaleDateString()}.pdf`);
-};
+  };
 
   if (loading) return (
     <div className="flex flex-col items-center justify-center min-h-screen gap-4">
