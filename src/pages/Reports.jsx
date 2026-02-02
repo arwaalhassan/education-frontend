@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { arabicFontBase64 } from '../assets/fonts/arabicFont';
+import { arabicFontBase64 } from '../assets/arabicFont';
 
 const Reports = () => {
   const [reportData, setReportData] = useState(null);
