@@ -25,7 +25,11 @@ const Reports = () => {
     };
     fetchFullReports();
   }, []);
-
+const fixArabicText = (text) => {
+    if (!text) return "";
+    // إعادة تشكيل الحروف العربية لتتصل ببعضها
+    return arabicReshaper.reshape(text);
+  };
   const exportToPDF = () => {
     if (!reportData) return;
     
