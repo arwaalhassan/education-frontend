@@ -39,66 +39,71 @@ const Reports = () => {
     
     const doc = new jsPDF();
 
-    // 1. تسجيل الخط
+    // 1. إعداد الخط العربي
     doc.addFileToVFS("ArabicFont.ttf", arabicFontBase64);
     doc.addFont("ArabicFont.ttf", "ArabicFont", "normal");
-    
-    // 2. تفعيل الخط
     doc.setFont("ArabicFont");
 
-    // العنوان الرئيسي (محاذاة في المنتصف)
+    // 2. ترويسة التقرير
     doc.setFontSize(22);
-    doc.text(fixArabicText("تقرير أداء المنصة الشامل"), 105, 20, { align: "center" });
+    doc.text(fixArabicText("تقرير أداء المنصة التعليمية"), 105, 20, { align: "center" });
     
-    // إحصائيات سريعة
-    doc.setFontSize(14);
-    doc.text(`${reportData.summary?.totalEarnings || 0} $ :${fixArabicText("إجمالي الأرباح")}`, 190, 40, { align: "right" });
-    doc.text(`${reportData.summary?.totalStudents || 0} :${fixArabicText("إجمالي الطلاب النشطين")}`, 190, 50, { align: "right" });
+    doc.setFontSize(12);
+    const reportDate = new Date().toLocaleDateString('ar-EG'); // تاريخ عربي
+    doc.text(`${fixArabicText("تاريخ التقرير")}: ${reportDate}`, 20, 30, { align: "left" });
 
-    // 3. جدول الكورسات الأكثر مبيعاً
+    // 3. قسم الملخص المالي والعددي
+    doc.setFontSize(14);
+    doc.setDrawColor(200, 200, 200);
+    doc.line(20, 35, 190, 35); // خط فاصـل
+
+    doc.text(`${reportData.summary?.totalEarnings || 0} دولار :${fixArabicText("إجمالي الأرباح")}`, 190, 45, { align: "right" });
+    doc.text(`${reportData.summary?.totalStudents || 0} :${fixArabicText("إجمالي عدد الطلاب")}`, 190, 55, { align: "right" });
+    doc.text(`${reportData.summary?.averageGrade || 0}% :${fixArabicText("متوسط درجات الطلاب")}`, 190, 65, { align: "right" });
+
+    // 4. جدول المقررات الأكثر طلباً (معرب بالكامل)
     if (reportData.topCourses?.length > 0) {
+        doc.text(fixArabicText("المقررات الدراسية الأعلى مبيعاً"), 190, 80, { align: "right" });
+        
         autoTable(doc, {
-            startY: 65,
-            head: [[fixArabicText('عدد المبيعات'), fixArabicText('اسم المقرر')]], // عكسنا الأعمدة لتناسب RTL
+            startY: 85,
+            head: [[fixArabicText('عدد المبيعات'), fixArabicText('اسم المقرر')]],
             body: reportData.topCourses.map(c => [
                 c.sales_count, 
                 fixArabicText(c.title)
             ]),
-            styles: { 
-                font: "ArabicFont", 
-                halign: 'right',
-                fontSize: 12 
-            },
-            headStyles: { 
-                fillColor: [41, 128, 185], 
-                font: "ArabicFont",
-                halign: 'right' 
-            },
-            columnStyles: {
-                0: { halign: 'center' }, // عمود الأرقام في المنتصف
-                1: { halign: 'right' }   // عمود الأسماء لليمين
-            }
+            styles: { font: "ArabicFont", halign: 'right', fontSize: 11 },
+            headStyles: { fillColor: [41, 128, 185], font: "ArabicFont", halign: 'right' },
+            columnStyles: { 0: { halign: 'center', width: 40 } }
         });
     }
 
-    // 4. جدول جودة الاختبارات
-    const finalY = doc.lastAutoTable.finalY || 100;
+    // 5. جدول أداء الاختبارات (معرب بالكامل)
+    const finalY = doc.lastAutoTable.finalY || 120;
     if (reportData.quizPerformance?.length > 0) {
-        doc.text(fixArabicText("تحليل أداء الاختبارات"), 190, finalY + 15, { align: "right" });
+        doc.text(fixArabicText("تحليل جودة وأداء الاختبارات"), 190, finalY + 15, { align: "right" });
         
         autoTable(doc, {
             startY: finalY + 20,
-            head: [[fixArabicText('متوسط النجاح'), fixArabicText('عنوان الاختبار')]],
+            head: [[fixArabicText('نسبة النجاح'), fixArabicText('عنوان الاختبار')]],
             body: reportData.quizPerformance.map(q => [
-                `${Math.round(q.average_score)}%`,
+                `%${Math.round(q.average_score)}`,
                 fixArabicText(q.quiz_title)
             ]),
             styles: { font: "ArabicFont", halign: 'right' },
-            headStyles: { fillColor: [142, 68, 173], font: "ArabicFont" }
+            headStyles: { fillColor: [142, 68, 173], font: "ArabicFont", halign: 'right' }
         });
     }
 
-    doc.save(`Admin_Report_${new Date().toLocaleDateString()}.pdf`);
+    // تذييل الصفحة
+    const pageCount = doc.internal.getNumberOfPages();
+    for(let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(10);
+        doc.text(fixArabicText(`صفحة ${i} من ${pageCount}`), 105, 285, { align: "center" });
+    }
+
+    doc.save(`تقرير_المنصة_${new Date().getTime()}.pdf`);
   };
 
   if (loading) return (
