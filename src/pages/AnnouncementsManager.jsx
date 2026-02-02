@@ -14,11 +14,8 @@ const AnnouncementsManager = () => {
 
     const getSafeImageUrl = (url) => {
         if (!url) return null;
-        // إذا كان الرابط يبدأ بـ http، نقوم بتبديله بـ https ليتوافق مع أمان المتصفح
         let safeUrl = url.replace('http://', 'https://');
         
-        // إذا كان الرابط لا يحتوي على النطاق (Domain) أضف الـ Base URL الخاص بك
-        // safeUrl = `https://your-api-domain.com${safeUrl}`; 
         
         return safeUrl;
     };
