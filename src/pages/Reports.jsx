@@ -25,51 +25,76 @@ const Reports = () => {
     };
     fetchFullReports();
   }, []);
-const fixArabicText = (text) => {
+// دالة متكاملة لمعالجة النصوص العربية للـ PDF
+  const fixArabicText = (text) => {
     if (!text) return "";
-    // إعادة تشكيل الحروف العربية لتتصل ببعضها
-    return arabicReshaper.reshape(text);
+    // 1. إعادة تشكيل الحروف (لربط الحروف ببعضها)
+    const reshaped = arabicReshaper.reshape(text);
+    // 2. قلب النص (لأن PDF يقرأ من اليسار لليمين افتراضياً)
+    return reshaped.split('').reverse().join('');
   };
+
   const exportToPDF = () => {
     if (!reportData) return;
     
     const doc = new jsPDF();
 
-    // تسجيل الخط
+    // 1. تسجيل الخط
     doc.addFileToVFS("ArabicFont.ttf", arabicFontBase64);
     doc.addFont("ArabicFont.ttf", "ArabicFont", "normal");
     
-    // تفعيل الخط للنصوص العادية
+    // 2. تفعيل الخط
     doc.setFont("ArabicFont");
 
-    // العنوان (استخدام الدالة المساعدة)
-    doc.setFontSize(20);
-    doc.text(fixArabicText("تقرير أداء المنصة"), 190, 15, { align: "right" });
+    // العنوان الرئيسي (محاذاة في المنتصف)
+    doc.setFontSize(22);
+    doc.text(fixArabicText("تقرير أداء المنصة الشامل"), 105, 20, { align: "center" });
     
-    doc.setFontSize(12);
-    doc.text(`${fixArabicText("إجمالي الأرباح")}: ${reportData.summary?.totalEarnings || 0} $`, 190, 30, { align: "right" });
+    // إحصائيات سريعة
+    doc.setFontSize(14);
+    doc.text(`${reportData.summary?.totalEarnings || 0} $ :${fixArabicText("إجمالي الأرباح")}`, 190, 40, { align: "right" });
+    doc.text(`${reportData.summary?.totalStudents || 0} :${fixArabicText("إجمالي الطلاب النشطين")}`, 190, 50, { align: "right" });
 
-    // تعديل الجدول
+    // 3. جدول الكورسات الأكثر مبيعاً
     if (reportData.topCourses?.length > 0) {
         autoTable(doc, {
-            // معالجة نصوص العناوين
-            head: [[fixArabicText('اسم المقرر'), fixArabicText('عدد المبيعات')]],
-            // معالجة نصوص البيانات داخل الجدول
+            startY: 65,
+            head: [[fixArabicText('عدد المبيعات'), fixArabicText('اسم المقرر')]], // عكسنا الأعمدة لتناسب RTL
             body: reportData.topCourses.map(c => [
-              fixArabicText(c.title), 
-              c.sales_count
+                c.sales_count, 
+                fixArabicText(c.title)
             ]),
-            startY: 50,
             styles: { 
                 font: "ArabicFont", 
-                halign: 'right', // محاذاة لليمين داخل الخلايا
+                halign: 'right',
+                fontSize: 12 
             },
             headStyles: { 
-              fillColor: [41, 128, 185],
-              font: "ArabicFont" 
+                fillColor: [41, 128, 185], 
+                font: "ArabicFont",
+                halign: 'right' 
             },
-            // هام جداً: التأكد من أن اللغة هي العربية في الإعدادات
-            theme: 'grid'
+            columnStyles: {
+                0: { halign: 'center' }, // عمود الأرقام في المنتصف
+                1: { halign: 'right' }   // عمود الأسماء لليمين
+            }
+        });
+    }
+
+    // 4. جدول جودة الاختبارات
+    const finalY = doc.lastAutoTable.finalY || 100;
+    if (reportData.quizPerformance?.length > 0) {
+        doc.text(fixArabicText("تحليل أداء الاختبارات"), 190, finalY + 15, { align: "right" });
+        
+        autoTable(doc, {
+            startY: finalY + 20,
+            head: [[fixArabicText('متوسط النجاح'), fixArabicText('عنوان الاختبار')]],
+            body: reportData.quizPerformance.map(q => [
+                `${Math.round(q.average_score)}%`,
+                fixArabicText(q.quiz_title)
+            ]),
+            styles: { font: "ArabicFont", halign: 'right' },
+            headStyles: { fillColor: [142, 68, 173], font: "ArabicFont" }
         });
     }
 
