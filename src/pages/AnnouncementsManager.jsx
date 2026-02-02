@@ -12,6 +12,16 @@ const AnnouncementsManager = () => {
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
 
+    const getSafeImageUrl = (url) => {
+        if (!url) return null;
+        // إذا كان الرابط يبدأ بـ http، نقوم بتبديله بـ https ليتوافق مع أمان المتصفح
+        let safeUrl = url.replace('http://', 'https://');
+        
+        // إذا كان الرابط لا يحتوي على النطاق (Domain) أضف الـ Base URL الخاص بك
+        // safeUrl = `https://your-api-domain.com${safeUrl}`; 
+        
+        return safeUrl;
+    };
     // 1. جلب الإعلانات
     const fetchAnnouncements = async () => {
         try {
