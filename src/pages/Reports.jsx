@@ -7,7 +7,7 @@ import {
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { arabicFontBase64 } from '../assets/arabicFont';
-import arabicReshaper from 'arabic-reshaper';
+
 
 const Reports = () => {
   const [reportData, setReportData] = useState(null);
