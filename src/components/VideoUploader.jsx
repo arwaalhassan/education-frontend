@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import api from '../services/api';
-import { Upload, Loader, FileText, Video as VideoIcon } from 'lucide-react';
+import { Upload, Loader, FileUp, Link as LinkIcon } from 'lucide-react';
 
 const VideoUploader = ({ courseId, onUploadSuccess }) => {
+  // 1. تعريف حالات الحالة (States) المفقودة
+  const [uploadType, setUploadType] = useState('file'); // 'file' أو 'link'
   const [file, setFile] = useState(null);
   const [title, setTitle] = useState(""); 
   const [linkUrl, setLinkUrl] = useState("");
@@ -11,18 +13,16 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
 
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
-  const uploadVideo = async () => {
-    // التحقق من المدخلات المطلوبة للسيرفر
-    if (!file || !title) return alert("يرجى إدخال العنوان واختيار ملف");
-// التحقق من نوع الرفع
+  const handleUpload = async () => {
+    // التحقق من المدخلات
+    if (!title) return alert("يرجى إدخال العنوان");
     if (uploadType === 'file' && !file) return alert("يرجى اختيار ملف");
     if (uploadType === 'link' && !linkUrl) return alert("يرجى إدخال الرابط");
 
     setUploading(true);
     try {
       let res;
-   if (uploadType === 'file') {
-        // حالة رفع ملف (FormData)
+      if (uploadType === 'file') {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('course_id', courseId);
@@ -34,20 +34,24 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
           onUploadProgress: (p) => setProgress(Math.round((p.loaded * 100) / p.total))
         });
       } else {
-        // حالة إضافة رابط (JSON عادي)
         const payload = {
           course_id: courseId,
           title: title,
-          link_url: linkUrl, // هذا الحقل سيخزنه السيرفر في file_storage_path
+          link_url: linkUrl,
           description: 'رابط حصة مباشرة / خارجي',
           sort_order: 0
         };
-        
         res = await api.post('/videos/upload', payload);
       }
+      
+      // تصحيح: الوصول للبيانات من الاستجابة مباشرة
+      const result = res.data;
       onUploadSuccess(result); 
-      alert(`تم رفع ${result.type} بنجاح!`);
+      alert(`تمت الإضافة بنجاح!`);
+      
+      // إعادة ضبط الحقول
       setFile(null);
+      setLinkUrl("");
       setTitle("");
     } catch (error) {
       console.error(error);
@@ -61,7 +65,7 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
 
   return (
     <div className="p-6 bg-white rounded-2xl border border-gray-200 shadow-sm" dir="rtl">
-      {/* اختيار نوع الرفع */}
+      {/* تبديل نوع الرفع */}
       <div className="flex bg-gray-100 p-1 rounded-xl mb-6">
         <button
           onClick={() => setUploadType('file')}
@@ -76,6 +80,7 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
           <LinkIcon size={18} /> إضافة رابط (Meet)
         </button>
       </div>
+
       <div className="mb-4">
         <label className="block text-sm font-bold mb-2">عنوان الدرس / المادة</label>
         <input 
@@ -83,7 +88,7 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
           value={title} 
           onChange={(e) => setTitle(e.target.value)}
           placeholder="مثلاً: حصة مباشرة - مراجعة الفصل الأول"
-          className="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-4 py-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500 text-right"
         />
       </div>
 
@@ -93,7 +98,7 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
             type="file" 
             onChange={handleFileChange} 
             accept="video/*,.pdf,.doc,.docx" 
-            className="w-full text-sm text-gray-500 file:bg-blue-50 file:text-blue-700 file:px-4 file:py-2 file:rounded-lg file:border-0" 
+            className="w-full text-sm text-gray-500" 
           />
         </div>
       ) : (
