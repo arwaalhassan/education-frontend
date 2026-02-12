@@ -42,6 +42,8 @@ function App() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
+  // --- مكونات الحماية (Guards) ---
+  
   const ProtectedRoute = ({ children }) => {
     if (!token) return <Navigate to="/login" />;
     return children;
@@ -62,52 +64,41 @@ function App() {
   return (
     <Router>
       <div className="flex bg-gray-100 min-h-screen">
+        {/* لا يظهر الشريط الجانبي إلا إذا كان المستخدم مسجلاً دخوله */}
         {token && user && <Sidebar onLogout={refreshAuth} />}
 
         <div className="flex-1 overflow-y-auto">
           <Routes>
+            {/* مسار تسجيل الدخول */}
             <Route 
               path="/login" 
               element={!token ? <Login onLogin={refreshAuth} /> : <Navigate to="/" />} 
             />
 
-            {/* --- مسارات عامة --- */}
+            {/* --- 1. مسارات عامة (للطالب والمعلم والآدمن) --- */}
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
             <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
-            <Route path="/add-course" element={<ProtectedRoute><AddCourse /></ProtectedRoute>} />
+
+            {/* --- 2. مسارات المعلمين والآدمن (إدارة المحتوى) --- */}
+            {/* ملاحظة: تم نقل المسارات التي كانت تسمح للطالب بالدخول إليها بالخطأ إلى هنا */}
+            <Route path="/my-courses" element={<AdminOrTeacherRoute><MyCourses /></AdminOrTeacherRoute>} />
+            <Route path="/add-course" element={<AdminOrTeacherRoute><AddCourse /></AdminOrTeacherRoute>} />
+            <Route path="/edit-course/:id" element={<AdminOrTeacherRoute><AddCourse /></AdminOrTeacherRoute>} /> 
             
-            {/* صفحة إنشاء اختبار جديد */}
-            <Route path="/create-quiz/:courseId" element={<ProtectedRoute><CreateQuiz /></ProtectedRoute>} />
+            {/* إدارة الاختبارات */}
+            <Route path="/create-quiz/:courseId" element={<AdminOrTeacherRoute><CreateQuiz /></AdminOrTeacherRoute>} />
+            <Route path="/admin/course/:courseId/quizzes" element={<AdminOrTeacherRoute><AllQuizzes /></AdminOrTeacherRoute>} />
+            <Route path="/admin/edit-quiz/:quizId" element={<AdminOrTeacherRoute><CreateQuiz isEdit={true} /></AdminOrTeacherRoute>} />
+            <Route path="/admin/results" element={<AdminOrTeacherRoute><StudentResults /></AdminOrTeacherRoute>} />
 
-            {/* --- مسار نتائج الطلاب --- */}
-            <Route 
-              path="/admin/results" 
-              element={<AdminOrTeacherRoute><StudentResults /></AdminOrTeacherRoute>} 
-            />
-
-            {/* --- مسارات الأدمن حصراً --- */}
+            {/* --- 3. مسارات الآدمن حصراً (إدارة النظام والأرباح) --- */}
             <Route path="/admin/students" element={<AdminRoute><StudentManagement /></AdminRoute>} />
             <Route path="/admin/users" element={<AdminRoute><UsersManagement /></AdminRoute>} />
             <Route path="/admin/announcements" element={<AdminRoute><AnnouncementsManager /></AdminRoute>} />
             <Route path="/admin/all-content" element={<AdminRoute><AllContentManagement /></AdminRoute>} />
             <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
 
-            {/* --- مسارات التعديل والإدارة الضبط هنا --- */}
-            <Route path="/edit-course/:id" element={<AdminOrTeacherRoute><AddCourse /></AdminOrTeacherRoute>} /> 
-
-            {/* تم التعديل هنا: المسار الآن يفتح AllQuizzes لعرض القائمة بدلاً من CreateQuiz */}
-            <Route 
-              path="/admin/course/:courseId/quizzes" 
-              element={<AdminOrTeacherRoute><AllQuizzes /></AdminOrTeacherRoute>} 
-            />
-
-            {/* مسار تعديل الأسئلة لاحقاً */}
-            <Route 
-              path="/admin/edit-quiz/:quizId" 
-              element={<AdminOrTeacherRoute><CreateQuiz isEdit={true} /></AdminOrTeacherRoute>} 
-            />
-
+            {/* إعادة توجيه أي مسار غير موجود */}
             <Route path="*" element={<Navigate to={token ? "/" : "/login"} />} />
           </Routes>
         </div>
