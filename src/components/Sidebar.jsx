@@ -33,7 +33,7 @@ const Sidebar = ({ onLogout }) => {
       <div className="p-6 flex items-center gap-3 border-b border-slate-800">
         <div className="bg-white p-1 rounded-lg shadow-md overflow-hidden flex-shrink-0">
           <img 
-            src="/src/assets/icon.jpg" // تأكدي أن الصورة موجودة في مجلد public/icon.jpg في مشروع الـ React
+            src="/icon.jpg" // تأكدي أن الصورة موجودة في مجلد public/icon.jpg في مشروع الـ React
             alt="Logo"
             className="w-8 h-8 object-contain" 
           />
