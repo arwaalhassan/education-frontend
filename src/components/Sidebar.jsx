@@ -34,7 +34,7 @@ const Sidebar = ({ onLogout }) => {
         <div className="bg-blue-600 p-2 rounded-lg">
            <GraduationCap className="text-white" size={24} />
         </div>
-        <span className="text-xl font-bold text-white tracking-wide">منصتي</span>
+        <span className="text-xl font-bold text-white tracking-wide">منصة خطوة بخطوة التعليمية</span>
       </div>
 
       <nav className="flex-1 overflow-y-auto mt-4 px-2">
