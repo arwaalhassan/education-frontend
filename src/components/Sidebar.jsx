@@ -31,8 +31,12 @@ const Sidebar = ({ onLogout }) => {
   return (
     <div className="h-screen w-64 bg-slate-900 text-white flex flex-col sticky top-0" dir="rtl">
       <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-        <div className="bg-blue-600 p-2 rounded-lg">
-           <GraduationCap className="text-white" size={24} />
+        <div className="bg-white p-1 rounded-lg shadow-md overflow-hidden flex-shrink-0">
+          <img 
+            src="/icon.jpg" // تأكدي أن الصورة موجودة في مجلد public/icon.jpg في مشروع الـ React
+            alt="Logo"
+            className="w-8 h-8 object-contain" 
+          />
         </div>
         <span className="text-xl font-bold text-white tracking-wide">منصة خطوة بخطوة التعليمية</span>
       </div>
