@@ -14,7 +14,7 @@ import Reports from './pages/Reports';
 import AnnouncementsManager from './pages/AnnouncementsManager';
 import AllContentManagement from './pages/AllContentManagement';
 import StudentResults from './pages/StudentResults'; 
-
+import CourseLessons from './pages/CourseLessons'; 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(() => {
@@ -84,7 +84,11 @@ function App() {
             <Route path="/my-courses" element={<AdminOrTeacherRoute><MyCourses /></AdminOrTeacherRoute>} />
             <Route path="/add-course" element={<AdminOrTeacherRoute><AddCourse /></AdminOrTeacherRoute>} />
             <Route path="/edit-course/:id" element={<AdminOrTeacherRoute><AddCourse /></AdminOrTeacherRoute>} /> 
-            
+            {/* إدارة الدروس والمحتوى */}
+            <Route 
+              path="/admin/course/:courseId/lessons" 
+              element={<AdminOrTeacherRoute><CourseLessons /></AdminOrTeacherRoute>} 
+            />
             {/* إدارة الاختبارات */}
             <Route path="/create-quiz/:courseId" element={<AdminOrTeacherRoute><CreateQuiz /></AdminOrTeacherRoute>} />
             <Route path="/admin/course/:courseId/quizzes" element={<AdminOrTeacherRoute><AllQuizzes /></AdminOrTeacherRoute>} />
