@@ -127,7 +127,14 @@ const AllContentManagement = () => {
                                         <FileText size={20} />
                                         <span>الاختبارات</span>
                                     </button>
-
+                                    {/* زر إدارة الدروس - أضيفيه بجانب زر الاختبارات */}
+                                    <button 
+                                        onClick={() => navigate(`/admin/course/${course.id}/lessons`)}
+                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-blue-50 text-blue-700 rounded-2xl font-bold hover:bg-blue-600 hover:text-white transition-all duration-200 border border-blue-100"
+                                    >
+                                    <BookOpen size={20} />
+                                    <span>الدروس</span>
+                                    </button>
                                     {/* زر التعديل */}
                                     <button 
                                         onClick={() => navigate(`/edit-course/${course.id}`)}
