@@ -12,10 +12,10 @@ const AddCourse = () => {
   const [isSaved, setIsSaved] = useState(!!id);
   const [loading, setLoading] = useState(false);
 
-  const [courseData, setCourseData] = useState({ 
+ const [courseData, setCourseData] = useState({ 
     title: '', 
     description: '', 
-    branch: 'scientific', 
+    grade: 'تاسع', // القيمة الافتراضية الجديدة
     price: '' 
   });
 
@@ -30,7 +30,7 @@ const AddCourse = () => {
       setCourseData({
         title: res.data.title,
         description: res.data.description,
-        branch: res.data.branch,
+        grade: res.data.grade || 'تاسع', // جلب الصف من السيرفر
         price: res.data.price
       });
     } catch (err) {
@@ -42,7 +42,6 @@ const AddCourse = () => {
 
   // الوظيفة الأساسية: حفظ بيانات الكورس للحصول على ID
   const saveBasicDetails = async () => {
-    // التأكد من تعبئة البيانات الأساسية لمنع الـ 400 Bad Request
     if (!courseData.title || !courseData.price) {
       return alert("يرجى إدخال العنوان والسعر على الأقل");
     }
@@ -53,7 +52,8 @@ const AddCourse = () => {
     const payload = {
       title: courseData.title,
       description: courseData.description || "",
-      branch: courseData.branch,
+      grade: courseData.grade, // إرسال الصف الدراسي بدلاً من الفرع (أو معه)
+      branch: 'scientific', // يمكن تركه كقيمة افتراضية إذا كان السيرفر يطلبه إجبارياً
       price: Number(courseData.price),
       instructor_id: user?.id 
     };
@@ -122,17 +122,20 @@ const AddCourse = () => {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-bold mb-1 mr-1">الفرع</label>
-                <select 
-                  className="w-full p-3 border rounded-xl outline-none bg-white"
-                  value={courseData.branch}
-                  onChange={(e) => setCourseData({...courseData, branch: e.target.value})}
-                >
-                  <option value="scientific">علمي</option>
-                  <option value="literary">أدبي</option>
-                </select>
-              </div>
+      {/* القسم المعدل: اختيار الصف الدراسي */}
+      <div>
+        <label className="block text-sm font-bold mb-1 mr-1">الصف الدراسي *</label>
+        <select 
+          className="w-full p-3 border rounded-xl outline-none bg-white focus:ring-2 focus:ring-blue-500"
+          value={courseData.grade}
+          onChange={(e) => setCourseData({...courseData, grade: e.target.value})}
+        >
+          <option value="تاسع">الصف التاسع</option>
+          <option value="عاشر">الصف العاشر</option>
+          <option value="11">الحادي عشر</option>
+          <option value="12">البكالوريا</option>
+        </select>
+      </div>
               <div>
                 <label className="block text-sm font-bold mb-1 mr-1">السعر ($) *</label>
                 <input 
