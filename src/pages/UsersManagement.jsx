@@ -130,7 +130,7 @@ const UsersControl = () => {
                     <thead className="bg-gray-100 text-gray-600">
                         <tr>
                             <th className="p-4">المستخدم</th>
-                            <th className="p-4">الرتبة</th>
+                            <th className="p-4">الدور</th>
                             <th className="p-4">الحالة</th>
                             <th className="p-4">الإجراءات</th>
                         </tr>
@@ -233,7 +233,7 @@ const UsersControl = () => {
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">الرتبة</label>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">الدور</label>
                                 <select 
                                     className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none bg-white"
                                     value={newUser.role}
