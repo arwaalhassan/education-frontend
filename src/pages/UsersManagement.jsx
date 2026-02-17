@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
-import { Users, Shield, UserMinus, UserCheck, CreditCard, Search, UserPlus, X } from 'lucide-react';
+import { Users, Shield, UserMinus, UserCheck, CreditCard, Search, UserPlus, X, SmartphoneNfc, Trash2 } from 'lucide-react';
 
 const UsersControl = () => {
     const [users, setUsers] = useState([]);
