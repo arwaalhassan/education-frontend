@@ -166,13 +166,22 @@ const UsersControl = () => {
                                     >
                                         {user.is_active ? <UserMinus size={20}/> : <UserCheck size={20}/>}
                                     </button>
-                                    <button 
-                                        onClick={() => handleManualAccess(user.id)}
-                                        className="p-2 text-purple-600 hover:bg-purple-50 rounded-lg transition"
-                                        title="منح وصول يدوي"
-                                    >
-                                        <CreditCard size={20} />
-                                    </button>
+                                   {/* زر إعادة تعيين الجهاز */}
+                                        <button 
+                                            onClick={() => handleResetDevice(user.id)}
+                                            className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                                            title="إعادة تعيين الجهاز (فك القفل)"
+                                        >
+                                            <SmartphoneNfc size={18} />
+                                        </button>
+                                    {/* زر حذف المستخدم */}
+                                        <button 
+                                            onClick={() => handleDeleteUser(user.id, user.username)}
+                                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                            title="حذف المستخدم نهائياً"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
                                 </td>
                             </tr>
                         ))}
