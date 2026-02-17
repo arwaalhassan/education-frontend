@@ -26,7 +26,28 @@ const UsersControl = () => {
     };
 
     useEffect(() => { fetchUsers(); }, []);
+// --- [1] دالة إعادة تعيين الجهاز ---
+    const handleResetDevice = async (userId) => {
+        if (!window.confirm("هل أنت متأكد من فك قفل الجهاز لهذا المستخدم؟ سيتمكن من الدخول من أي جهاز جديد مرة واحدة.")) return;
+        try {
+            await api.put('/admin/users/reset-device', { userId });
+            alert("تم إعادة تعيين الجهاز بنجاح");
+        } catch (err) {
+            alert(err.response?.data?.message || "فشلت عملية إعادة التعيين");
+        }
+    };
 
+    // --- [2] دالة حذف المستخدم ---
+    const handleDeleteUser = async (id, username) => {
+        if (!window.confirm(`هل أنت متأكد تماماً من حذف المستخدم (${username})؟ لا يمكن التراجع عن هذه الخطوة.`)) return;
+        try {
+            await api.delete(`/admin/users/${id}`);
+            setUsers(users.filter(u => u.id !== id)); // إزالة من القائمة فوراً
+            alert("تم حذف المستخدم بنجاح");
+        } catch (err) {
+            alert(err.response?.data?.message || "فشل الحذف (قد يكون للمستخدم سجلات مالية تمنع حذفه)");
+        }
+    };
     const handleToggleStatus = async (id) => {
         try {
             const response = await api.patch(`/admin/users/${id}/status`);
