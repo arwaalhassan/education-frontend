@@ -10,7 +10,8 @@ const Login = ({ onLogin }) => { // 1. استلام الدالة onLogin كـ Pr
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
-    const handleLogin = async (e) => {
+    // ... داخل دالة handleLogin
+const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError('');
@@ -19,12 +20,14 @@ const Login = ({ onLogin }) => { // 1. استلام الدالة onLogin كـ Pr
         const response = await axios.post(
             'https://education-scj0.onrender.com/api/auth/login',
             {
-                email: email.trim(), // إزالة أي مسافات زائدة
-                password: password
+                email: email.trim(),
+                password: password,
+                // أضف هذا السطر؛ السيرفر يرفض الطلب بدونه (خطأ 400)
+                device_id: "web_browser_access" 
             },
             {
                 headers: {
-                    'Content-Type': 'application/json' // تأكيد نوع البيانات
+                    'Content-Type': 'application/json'
                 }
             }
         );
@@ -37,14 +40,13 @@ const Login = ({ onLogin }) => { // 1. استلام الدالة onLogin كـ Pr
         navigate('/');
 
     } catch (err) {
-        // طباعة الخطأ في الكونسول لمعرفة السبب الدقيق أثناء التطوير
         console.error("Login Error Details:", err.response?.data);
+        // عرض الرسالة القادمة من السيرفر (مثل: هذا الحساب مرتبط بجهاز آخر)
         setError(err.response?.data?.message || 'فشل تسجيل الدخول. تأكد من البيانات.');
     } finally {
         setLoading(false);
     }
 };
-
     return (
         <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4" dir="rtl">
             <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
