@@ -11,35 +11,39 @@ const Login = ({ onLogin }) => { // 1. استلام الدالة onLogin كـ Pr
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError('');
+    e.preventDefault();
+    setLoading(true);
+    setError('');
 
-        try {
-            // الطلب للباك-إند
-            const response = await axios.post('https://education-scj0.onrender.com/api/auth/login', {
-                email,
-                password
-            });
-
-            // 2. تخزين البيانات في localStorage
-            localStorage.setItem('token', response.data.token);
-            localStorage.setItem('user', JSON.stringify(response.data.user));
-
-            // 3. تحديث الحالة (State) في App.jsx فوراً
-            if (onLogin) {
-                onLogin(); 
+    try {
+        const response = await axios.post(
+            'https://education-scj0.onrender.com/api/auth/login',
+            {
+                email: email.trim(), // إزالة أي مسافات زائدة
+                password: password
+            },
+            {
+                headers: {
+                    'Content-Type': 'application/json' // تأكيد نوع البيانات
+                }
             }
+        );
 
-            // 4. التوجيه دون الحاجة لعمل Reload للمتصفح
-            navigate('/');
+        // تخزين البيانات...
+        localStorage.setItem('token', response.data.token);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
 
-        } catch (err) {
-            setError(err.response?.data?.message || 'فشل تسجيل الدخول. تأكد من البيانات.');
-        } finally {
-            setLoading(false);
-        }
-    };
+        if (onLogin) onLogin(); 
+        navigate('/');
+
+    } catch (err) {
+        // طباعة الخطأ في الكونسول لمعرفة السبب الدقيق أثناء التطوير
+        console.error("Login Error Details:", err.response?.data);
+        setError(err.response?.data?.message || 'فشل تسجيل الدخول. تأكد من البيانات.');
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4" dir="rtl">
