@@ -37,7 +37,18 @@ const UsersControl = () => {
             alert(err.response?.data?.message || "فشلت عملية إعادة التعيين");
         }
     };
-
+const sendWhatsApp = (phone, code) => {
+    if (!phone) return alert("لا يوجد رقم هاتف لهذا المستخدم");
+    
+    // نص الرسالة الذي سيظهر في الواتساب
+    const message = `أهلاً بك في منصة التعليم. كود تفعيل حسابك هو: ${code}`;
+    
+    // إنشاء الرابط (مع التأكد من ترميز النص بشكل صحيح)
+    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+    
+    // فتح الرابط في نافذة جديدة
+    window.open(url, '_blank');
+};
     // --- [2] دالة حذف المستخدم ---
     const handleDeleteUser = async (id, username) => {
         if (!window.confirm(`هل أنت متأكد تماماً من حذف المستخدم (${username})؟ لا يمكن التراجع عن هذه الخطوة.`)) return;
@@ -133,7 +144,8 @@ const UsersControl = () => {
                             <th className="p-4">المستخدم</th>
                             <th className="p-4">الدور</th>
                             <th className="p-4">الحالة</th>
-                            <th className="p-4">التفعيل (واتساب)</th>
+                            <th className="p-4">رقم الهاتف</th> {/* عمود جديد */}
+                            <th className="p-4">كود التحقق</th> {/* عمود جديد */}
                             <th className="p-4">الإجراءات</th>
                         </tr>
                     </thead>
@@ -144,6 +156,21 @@ const UsersControl = () => {
                                     <div className="font-bold">{user.username}</div>
                                     <div className="text-sm text-gray-500">{user.email}</div>
                                 </td>
+                                {/* عرض رقم الهاتف */}
+            <td className="p-4 text-blue-600 font-mono text-sm">
+                {user.phone || '---'}
+            </td>
+
+            {/* عرض كود التحقق */}
+            <td className="p-4 text-center">
+                {!user.is_verified ? (
+                    <span className="bg-amber-100 text-amber-700 px-2 py-1 rounded font-bold border border-amber-200">
+                        {user.verification_code}
+                    </span>
+                ) : (
+                    <span className="text-green-500 text-xs">تم التأكيد ✅</span>
+                )}
+            </td>
                                 <td className="p-4">
                                     <select 
                                         value={user.role} 
@@ -160,17 +187,18 @@ const UsersControl = () => {
                                         {user.is_active ? 'نشط' : 'معطل'}
                                     </span>
                                 </td>
-                                <td className="p-4 text-center">
-            {user.is_verified ? (
-                <div className="flex items-center gap-1 text-green-600 justify-center">
-                    <CheckCircle size={16} /> <span className="text-xs font-bold">مفعل</span>
-                </div>
-            ) : (
-                <div className="flex items-center gap-1 text-red-500 justify-center">
-                    <XCircle size={16} /> <span className="text-xs font-bold">غير مفعل</span>
-                </div>
-            )}
-        </td>
+                                <td className="p-4 flex gap-1 justify-center">
+                {/* زر الإرسال عبر الواتساب - يظهر فقط إذا لم يتم التفعيل */}
+                {!user.is_verified && user.phone && (
+                    <button 
+                        onClick={() => sendWhatsApp(user.phone, user.verification_code)}
+                        className="p-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition shadow-sm"
+                        title="إرسال الكود للواتساب"
+                    >
+                        <svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.246 2.248 3.484 5.232 3.484 8.412-.003 6.557-5.338 11.892-11.893 11.892-1.997-.001-3.951-.5-5.688-1.448l-6.309 1.656zm6.224-3.92c1.516.903 3.009 1.357 4.605 1.358 5.403 0 9.803-4.398 9.805-9.802.001-2.617-1.02-5.077-2.872-6.93-1.852-1.854-4.312-2.874-6.931-2.874-5.405 0-9.803 4.398-9.806 9.801 0 1.691.479 3.177 1.386 4.611l-.993 3.626 3.746-.983z"/></svg>
+                    </button>
+                )}
+                                    </td>
                                 <td className="p-4 flex gap-2">
                                     <button 
                                         onClick={() => handleToggleStatus(user.id)}
