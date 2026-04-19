@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api'; 
-import { Users, Shield, UserMinus, UserCheck, CreditCard, Search, UserPlus, X, SmartphoneNfc, Trash2 } from 'lucide-react';
+import { Users, Shield, UserMinus, UserCheck, CreditCard, Search, UserPlus, X, SmartphoneNfc, Trash2, CheckCircle, XCircle } from 'lucide-react';
 
 const UsersControl = () => {
     const [users, setUsers] = useState([]);
@@ -11,6 +11,7 @@ const UsersControl = () => {
         username: '',
         email: '',
         password: '',
+        phone: '',
         role: 'student' 
     });
 
@@ -132,6 +133,7 @@ const UsersControl = () => {
                             <th className="p-4">المستخدم</th>
                             <th className="p-4">الدور</th>
                             <th className="p-4">الحالة</th>
+                            <th className="p-4">التفعيل (واتساب)</th>
                             <th className="p-4">الإجراءات</th>
                         </tr>
                     </thead>
@@ -158,6 +160,17 @@ const UsersControl = () => {
                                         {user.is_active ? 'نشط' : 'معطل'}
                                     </span>
                                 </td>
+                                <td className="p-4 text-center">
+            {user.is_verified ? (
+                <div className="flex items-center gap-1 text-green-600 justify-center">
+                    <CheckCircle size={16} /> <span className="text-xs font-bold">مفعل</span>
+                </div>
+            ) : (
+                <div className="flex items-center gap-1 text-red-500 justify-center">
+                    <XCircle size={16} /> <span className="text-xs font-bold">غير مفعل</span>
+                </div>
+            )}
+        </td>
                                 <td className="p-4 flex gap-2">
                                     <button 
                                         onClick={() => handleToggleStatus(user.id)}
@@ -222,6 +235,16 @@ const UsersControl = () => {
                                     onChange={(e) => setNewUser({...newUser, email: e.target.value})}
                                 />
                             </div>
+                            <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">رقم الهاتف (واتساب)</label>
+    <input 
+        type="text" required
+        className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
+        placeholder="09xxxxxxxx"
+        value={newUser.phone}
+        onChange={(e) => setNewUser({...newUser, phone: e.target.value})}
+    />
+</div>
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">كلمة المرور</label>
                                 <input 
