@@ -90,7 +90,7 @@ const sendWhatsApp = (phone, code) => {
             };
             setUsers([addedUser, ...users]);
             setShowAddModal(false);
-            setNewUser({ username: '', email: '', password: '', role: 'student' });
+            setNewUser({ username: '', email: '', password: '',phone: '', role: 'student' });
             alert("تم إضافة المستخدم بنجاح");
         } catch (err) {
             alert(err.response?.data?.message || "خطأ في إضافة المستخدم");
