@@ -17,10 +17,8 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
   const handleFileChange = (e) => setFile(e.target.files[0]);
 
   const handleUpload = async () => {
-    // التحقق من الحقول الأساسية
     if (!title) return alert("يرجى إدخال العنوان");
 
-    // التحقق بناءً على النوع المختار
     if (uploadType === 'file' && !file) return alert("يرجى اختيار ملف");
     if (uploadType === 'link' && !linkUrl) return alert("يرجى إدخال الرابط");
 
@@ -28,42 +26,41 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
     try {
       let res;
       if (uploadType === 'file') {
-        // إرسال ملف
         const formData = new FormData();
         formData.append('file', file);
         formData.append('course_id', courseId);
         formData.append('title', title);
-        formData.append('description', 'تم الرفع كملف');
+        formData.append('description', 'تم الرفع كملف من الجهاز');
         
         res = await api.post('/videos/upload', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
           onUploadProgress: (p) => setProgress(Math.round((p.loaded * 100) / p.total))
         });
       } else {
-        // إرسال رابط (JSON عادي)
+        // إرسال رابط (السيرفر سيفحص إذا كان درايف وسيقوم بسحبه)
         const payload = {
           course_id: courseId,
           title: title,
           link_url: linkUrl,
-          description: 'رابط حصة مباشرة',
+          description: linkUrl.includes('drive.google.com') ? 'سحب تلقائي من جوجل درايف' : 'رابط خارجي',
           sort_order: 0
         };
         res = await api.post('/videos/upload', payload);
       }
       
-      // التأكد من استلام النتيجة بشكل صحيح
       const result = res.data;
       onUploadSuccess(result); 
-      alert(`تمت الإضافة بنجاح!`);
+      alert(linkUrl.includes('drive.google.com') && uploadType === 'link' 
+        ? "جاري سحب الفيديو من درايف وحفظه على السيرفر..." 
+        : "تمت الإضافة بنجاح!");
       
-      // تفريغ الحقول بعد النجاح
       setFile(null);
       setLinkUrl("");
       setTitle("");
       setProgress(0);
     } catch (error) {
       console.error(error);
-      const errorMsg = error.response?.data?.message || "فشل الرفع";
+      const errorMsg = error.response?.data?.message || "فشل العملية";
       alert(errorMsg);
     } finally {
       setUploading(false);
