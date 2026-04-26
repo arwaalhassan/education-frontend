@@ -130,6 +130,7 @@ const AddCourse = () => {
           value={courseData.grade}
           onChange={(e) => setCourseData({...courseData, grade: e.target.value})}
         >
+          <option value="ثامن">الصف الثامن</option>
           <option value="تاسع">الصف التاسع</option>
           <option value="عاشر">الصف العاشر</option>
           <option value="11">الحادي عشر</option>
