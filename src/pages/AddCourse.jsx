@@ -26,7 +26,7 @@ const AddCourse = () => {
   const fetchCourseDetails = async () => {
     try {
       setLoading(true);
-      const res = await api.get(`/courses/${id}`);
+      const res = await api.get(`/courses/info/${id}`);
       setCourseData({
         title: res.data.title,
         description: res.data.description,

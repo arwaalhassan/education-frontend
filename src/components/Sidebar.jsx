@@ -1,7 +1,8 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, PlusCircle, Users, LogOut, GraduationCap, 
-  BookOpen, DollarSign, ClipboardCheck, UserCheck, Megaphone 
+  BookOpen, DollarSign, ClipboardCheck, UserCheck, Megaphone,
+  Ticket 
 } from 'lucide-react';
 
 const Sidebar = ({ onLogout }) => {
@@ -25,13 +26,14 @@ const Sidebar = ({ onLogout }) => {
     { name: 'إدارة المستخدمين', path: '/admin/users', icon: Users, roles: ['admin'] },
     { name: 'إدارة الإعلانات', path: '/admin/announcements', icon: Megaphone, roles: ['admin'] },
     { name: 'الأرباح والتقارير', path: '/reports', icon: DollarSign, roles: ['admin'] },
+    { name: 'إدارة الكوبونات', path: '/admin/coupons', icon: Ticket, roles: ['admin'] },
     { name: 'إدارة المحتوى', path: '/admin/all-content', icon: BookOpen, roles: ['admin'] },
   ];
 
   return (
     <div className="h-screen w-64 bg-slate-900 text-white flex flex-col sticky top-0" dir="rtl">
       <div className="p-6 flex items-center gap-3 border-b border-slate-800">
-        <div className="bg-white p-1 rounded-lg shadow-md overflow-hidden flex-shrink-0">
+        <div className="bg-white p-1 rounded-lg shadow-md overflow-hidden shrink-0">
           <img 
             src="/icon.jpg" // تأكدي أن الصورة موجودة في مجلد public/icon.jpg في مشروع الـ React
             alt="Logo"

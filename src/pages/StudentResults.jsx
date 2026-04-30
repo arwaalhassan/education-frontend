@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 import api from '../services/api'; 
 import { 
     ClipboardList, 
@@ -11,6 +12,7 @@ import {
 } from 'lucide-react';
 
 const StudentResults = () => {
+    const { courseId } = useParams();
     const [results, setResults] = useState([]);
     const [filteredResults, setFilteredResults] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -21,28 +23,42 @@ const StudentResults = () => {
     const [selectedCourse, setSelectedCourse] = useState('');
     const [coursesList, setCoursesList] = useState([]);
 
-    const fetchResults = async () => {
-        setLoading(true);
-        setError(null);
-        try {
-            const res = await api.get('/admin/results');
-            setResults(res.data);
-            setFilteredResults(res.data);
+   const fetchResults = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+        const user = JSON.parse(localStorage.getItem('user')); 
+        let endpoint = '';
 
-            // استخراج قائمة الكورسات الفريدة للفلترة
-            const uniqueCourses = [...new Set(res.data.map(item => item.course_name).filter(Boolean))];
-            setCoursesList(uniqueCourses);
-        } catch (err) {
-            console.error("فشل جلب النتائج", err);
-            setError("تعذر الاتصال بالسيرفر، تأكد من تشغيل الباك إند.");
-        } finally {
-            setLoading(false);
+        if (user.role === 'admin') {
+            // الأدمن - نترك المسار كما هو إذا كان يعمل لديكِ مسبقاً
+            endpoint = '/admin/results'; 
+        // ... داخل fetchResults
+} else {
+    // الأستاذ يجلب كل نتائجه دون الحاجة لـ ID في الرابط
+   endpoint = '/quizzes/teacher-all-results';
         }
-    };
+
+        const res = await api.get(endpoint);
+        const data = Array.isArray(res.data) ? res.data : [];
+        
+        setResults(data);
+        setFilteredResults(data);
+
+        // هذا السطر سيجعل قائمة "كل الكورسات" في الفلتر تمتلئ تلقائياً بأسماء كورسات الأستاذ
+        const uniqueCourses = [...new Set(data.map(item => item.course_name).filter(Boolean))];
+        setCoursesList(uniqueCourses);
+    } catch (err) {
+        console.error("فشل جلب النتائج", err);
+        setError("تعذر الحصول على النتائج، تأكد من صلاحيات الوصول.");
+    } finally {
+        setLoading(false);
+    }
+};
 
     useEffect(() => {
-        fetchResults();
-    }, []);
+    fetchResults();
+}, [courseId]); // هذا التغيير سيجعل الكود يعيد الطلب فور تغيير الكورس في الرابط
 
     // منطق البحث والفلترة التلقائي
     useEffect(() => {

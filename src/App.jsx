@@ -14,7 +14,8 @@ import Reports from './pages/Reports';
 import AnnouncementsManager from './pages/AnnouncementsManager';
 import AllContentManagement from './pages/AllContentManagement';
 import StudentResults from './pages/StudentResults'; 
-import CourseLessons from './pages/CourseLessons'; 
+import CourseLessons from './pages/CourseLessons';
+import CouponManager from './pages/CouponManager'; 
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(() => {
@@ -101,7 +102,7 @@ function App() {
             <Route path="/admin/announcements" element={<AdminRoute><AnnouncementsManager /></AdminRoute>} />
             <Route path="/admin/all-content" element={<AdminRoute><AllContentManagement /></AdminRoute>} />
             <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
-
+            <Route path="/admin/coupons" element={<AdminRoute><CouponManager /></AdminRoute>} />
             {/* إعادة توجيه أي مسار غير موجود */}
             <Route path="*" element={<Navigate to={token ? "/" : "/login"} />} />
           </Routes>

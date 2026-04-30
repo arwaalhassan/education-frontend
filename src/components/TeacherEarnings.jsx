@@ -30,7 +30,7 @@ const TeacherEarnings = () => {
       <div className="bg-white p-6 rounded-2xl shadow-sm border-r-4 border-orange-500">
         <div className="flex justify-between items-center">
           <div className="bg-orange-50 p-3 rounded-full text-orange-600"><PieChart /></div>
-          <span className="text-gray-500 text-sm font-medium">عمولة المنصة (20%)</span>
+          <span className="text-gray-500 text-sm font-medium">عمولة المنصة </span>
         </div>
         <p className="text-2xl font-bold mt-4 text-gray-800">{earnings.platformCommission} ج.م</p>
       </div>

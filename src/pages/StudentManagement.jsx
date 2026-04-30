@@ -63,7 +63,7 @@ const StudentManagement = () => {
                     <tbody>
                         {requests.length > 0 ? requests.map(req => (
                             <tr key={req.id} className="border-b last:border-0 hover:bg-gray-50 transition">
-                                <td className="p-4 font-medium">{req.username}</td>
+                                <td className="p-4 font-medium">{req.full_name}</td>
                                 <td className="p-4">{req.course_title}</td>
                                 <td className="p-4 text-green-600 font-bold">{req.amount} JOD</td>
                                 <td className="p-4">

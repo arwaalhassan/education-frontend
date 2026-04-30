@@ -3,7 +3,7 @@ import api from '../services/api';
 // تأكد من استيراد الأيقونات الصحيحة
 import { Upload, Loader, FileUp, Link as LinkIcon } from 'lucide-react';
 
-const VideoUploader = ({ courseId, onUploadSuccess }) => {
+const VideoUploader = ({ courseId,sectionId, onUploadSuccess }) => {
   // --- 1. تعريف الحالات (States) ---
   // هذا هو السطر الذي كان ينقصك ويسبب الخطأ
   const [uploadType, setUploadType] = useState('file'); 
@@ -29,6 +29,7 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
         const formData = new FormData();
         formData.append('file', file);
         formData.append('course_id', courseId);
+        formData.append('section_id', sectionId);
         formData.append('title', title);
         formData.append('description', 'تم الرفع كملف من الجهاز');
         
@@ -40,6 +41,7 @@ const VideoUploader = ({ courseId, onUploadSuccess }) => {
         // إرسال رابط (السيرفر سيفحص إذا كان درايف وسيقوم بسحبه)
         const payload = {
           course_id: courseId,
+          section_id: sectionId,
           title: title,
           link_url: linkUrl,
           description: linkUrl.includes('drive.google.com') ? 'سحب تلقائي من جوجل درايف' : 'رابط خارجي',

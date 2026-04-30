@@ -18,7 +18,7 @@ const MyCourses = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await api.get('/courses');
+      const response = await api.get('/courses/teacher-my');
       setCourses(response.data);
     } catch (error) {
       console.error("خطأ في جلب الكورسات", error);
@@ -43,22 +43,30 @@ const MyCourses = () => {
     }
   };
 
+  // تحسين دالة التحديث لضمان دقة البيانات وتنبيه المستخدم
   const handleUpdate = async (e) => {
     e.preventDefault();
     setUpdateLoading(true);
     try {
-      await api.put(`/courses/${selectedCourse.id}`, {
+      const response = await api.put(`/courses/${selectedCourse.id}`, {
         title: selectedCourse.title,
-        price: selectedCourse.price
+        price: selectedCourse.price // تأكدي أنه رقم
       });
-      setCourses(courses.map(c => c.id === selectedCourse.id ? selectedCourse : c));
+      
+      // نستخدم البيانات المرتجعة من السيرفر إذا وجدت، وإلا نستخدم الـ state المحلي
+      const updatedData = response.data.course || selectedCourse; 
+      
+      setCourses(courses.map(c => c.id === selectedCourse.id ? updatedData : c));
       setIsModalOpen(false);
+      alert("✅ تم تحديث بيانات الكورس بنجاح"); 
     } catch (error) {
-      alert("حدث خطأ أثناء التحديث");
+      console.error("Update error:", error);
+      alert("❌ عذراً، فشل التحديث: " + (error.response?.data?.message || "مشكلة في الاتصال"));
     } finally {
       setUpdateLoading(false);
     }
   };
+
 
   if (loading) return (
     <div className="flex flex-col justify-center items-center p-20 min-h-screen">
@@ -110,7 +118,7 @@ const MyCourses = () => {
               <div className="space-y-3">
                 {/* زر إدارة المحتوى */}
                 <button 
-                  onClick={() => navigate(`/manage-content/${course.id}`)}
+                  onClick={() => navigate(`/admin/course/${course.id}/lessons`)}
                   className="w-full flex items-center justify-center gap-2 bg-slate-900 text-white py-4 rounded-2xl font-bold hover:bg-black transition-all shadow-lg active:scale-95"
                 >
                   <FolderPlus size={20} />
