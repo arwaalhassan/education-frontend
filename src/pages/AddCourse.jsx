@@ -15,7 +15,7 @@ const AddCourse = () => {
  const [courseData, setCourseData] = useState({ 
     title: '', 
     description: '', 
-    grade: 'تاسع', // القيمة الافتراضية الجديدة
+    grade: 'It', // القيمة الافتراضية الجديدة
     price: '' 
   });
 
@@ -30,7 +30,7 @@ const AddCourse = () => {
       setCourseData({
         title: res.data.title,
         description: res.data.description,
-        grade: res.data.grade || 'تاسع', // جلب الصف من السيرفر
+        grade: res.data.grade || 'It', // جلب الصف من السيرفر
         price: res.data.price
       });
     } catch (err) {
@@ -53,7 +53,7 @@ const AddCourse = () => {
       title: courseData.title,
       description: courseData.description || "",
       grade: courseData.grade, // إرسال الصف الدراسي بدلاً من الفرع (أو معه)
-      branch: 'scientific', // يمكن تركه كقيمة افتراضية إذا كان السيرفر يطلبه إجبارياً
+      branch: '', // يمكن تركه كقيمة افتراضية إذا كان السيرفر يطلبه إجبارياً
       price: Number(courseData.price),
       instructor_id: user?.id 
     };
@@ -108,7 +108,7 @@ const AddCourse = () => {
                 className="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                 value={courseData.title}
                 onChange={(e) => setCourseData({...courseData, title: e.target.value})}
-                placeholder="مثلاً: كورس الفيزياء - الفصل الأول"
+                placeholder="مثلاً:كورس الهندسة"
               />
             </div>
 
@@ -124,17 +124,17 @@ const AddCourse = () => {
             <div className="grid grid-cols-2 gap-4">
       {/* القسم المعدل: اختيار الصف الدراسي */}
       <div>
-        <label className="block text-sm font-bold mb-1 mr-1">الصف الدراسي *</label>
+        <label className="block text-sm font-bold mb-1 mr-1">القسم  *</label>
         <select 
           className="w-full p-3 border rounded-xl outline-none bg-white focus:ring-2 focus:ring-blue-500"
           value={courseData.grade}
           onChange={(e) => setCourseData({...courseData, grade: e.target.value})}
         >
-          <option value="ثامن">الصف الثامن</option>
-          <option value="تاسع">الصف التاسع</option>
-          <option value="عاشر">الصف العاشر</option>
-          <option value="11">الحادي عشر</option>
-          <option value="12">البكالوريا</option>
+          <option value="It"> It</option>
+          <option value="Architecture">Architecture </option>
+          <option value="Mechanical">Mechanical </option>
+          <option value="Activities"> Activities</option>
+          <option value="Skills">Skills</option>
         </select>
       </div>
               <div>

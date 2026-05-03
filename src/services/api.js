@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-    baseURL: 'https://education-scj0.onrender.com/api', 
+    baseURL: 'http://72.61.178.147/api', 
 });
 
 // [1] Interceptor للطلبات الصادرة: إضافة التوكن تلقائياً

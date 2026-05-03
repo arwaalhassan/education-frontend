@@ -18,7 +18,7 @@ const handleLogin = async (e) => {
 
     try {
         const response = await axios.post(
-            'https://education-scj0.onrender.com/api/auth/login',
+            'http://72.61.178.147/api/auth/login',
             {
                 email: email.trim(),
                 password: password,
@@ -54,8 +54,8 @@ const handleLogin = async (e) => {
                     <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-100 rounded-full mb-4">
                         <GraduationCap className="text-blue-600" size={32} />
                     </div>
-                    <h2 className="text-3xl font-bold text-slate-800">تسجيل الدخول</h2>
-                    <p className="text-slate-500 mt-2">مرحباً بك في منصتي التعليمية</p>
+                    <h2 className="text-3xl font-bold text-slate-800">Login</h2>
+                    <p className="text-slate-500 mt-2">welcome to Great! Plattform</p>
                 </div>
 
                 {error && (
