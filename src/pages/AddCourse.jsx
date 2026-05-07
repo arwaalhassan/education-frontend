@@ -15,7 +15,7 @@ const AddCourse = () => {
  const [courseData, setCourseData] = useState({ 
     title: '', 
     description: '', 
-    grade: 'It', // القيمة الافتراضية الجديدة
+    grade: 'تاسع',
     price: '' 
   });
 
@@ -30,7 +30,7 @@ const AddCourse = () => {
       setCourseData({
         title: res.data.title,
         description: res.data.description,
-        grade: res.data.grade || 'It', // جلب الصف من السيرفر
+        grade: res.data.grade , // جلب الصف من السيرفر
         price: res.data.price
       });
     } catch (err) {
@@ -67,12 +67,18 @@ const AddCourse = () => {
         alert("تم تحديث البيانات");
       } else {
         // إنشاء كورس جديد
+
         const res = await api.post('/courses', payload);
-        // تأكد أن السيرفر يعيد الـ id الجديد في res.data.id أو res.data.courseId
-        const newId = res.data.id || res.data.courseId || res.data.insertId;
+        alert("تم إنشاء الكورس بنجاح");
+
+    const newId = res.data.id || res.data.courseId || res.data.insertId;
         setCourseId(newId);
-        setIsSaved(true);
       }
+
+      setIsSaved(true);
+      // التوجيه يتم هنا بعد التأكد من النجاح التام
+      navigate('/admin/all-content');
+
     } catch (err) {
       console.error("Error details:", err.response?.data);
       alert("خطأ: " + (err.response?.data?.message || "تأكد من إدخال جميع الحقول المطلوبة"));
@@ -108,7 +114,7 @@ const AddCourse = () => {
                 className="w-full p-3 border rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
                 value={courseData.title}
                 onChange={(e) => setCourseData({...courseData, title: e.target.value})}
-                placeholder="مثلاً:كورس الهندسة"
+                placeholder="مثلاً:كورس الفيزياء"
               />
             </div>
 
@@ -124,17 +130,17 @@ const AddCourse = () => {
             <div className="grid grid-cols-2 gap-4">
       {/* القسم المعدل: اختيار الصف الدراسي */}
       <div>
-        <label className="block text-sm font-bold mb-1 mr-1">القسم  *</label>
+        <label className="block text-sm font-bold mb-1 mr-1">الصف  *</label>
         <select 
           className="w-full p-3 border rounded-xl outline-none bg-white focus:ring-2 focus:ring-blue-500"
           value={courseData.grade}
           onChange={(e) => setCourseData({...courseData, grade: e.target.value})}
         >
-          <option value="It"> It</option>
-          <option value="Architecture">Architecture </option>
-          <option value="Mechanical">Mechanical </option>
-          <option value="Activities"> Activities</option>
-          <option value="Skills">Skills</option>
+          <option value="ثامن">الصف الثامن</option>
+          <option value="تاسع">الصف التاسع</option>
+          <option value="عاشر">الصف العاشر</option>
+          <option value="11">الحادي عشر</option>
+          <option value="12">البكالوريا</option>
         </select>
       </div>
               <div>
@@ -167,23 +173,7 @@ const AddCourse = () => {
           </div>
         </div>
 
-        {/* القسم الثاني: يفتح فقط بعد الحفظ الناجح لتجنب خطأ 403 و 400 */}
-        {isSaved && courseId && (
-          <div className="bg-white p-6 rounded-3xl shadow-lg border-2 border-blue-600">
-            <h3 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
-              <AlertCircle className="text-blue-600" size={20} />
-              الآن ارفع الدروس أو الملفات لهذا الكورس
-            </h3>
-            <VideoUploader courseId={courseId} onUploadSuccess={handleVideoSuccess} />
-            
-            <button 
-              onClick={() => navigate('/admin/all-content')}
-              className="w-full mt-6 bg-gray-900 text-white py-3 rounded-xl font-bold hover:bg-black transition"
-            >
-              إنهاء المهمة والعودة للوحة التحكم
-            </button>
-          </div>
-        )}
+        
       </div>
     </div>
   );
