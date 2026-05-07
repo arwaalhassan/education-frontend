@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { GraduationCap, Lock, Mail, AlertCircle } from 'lucide-react';
 
 const Login = ({ onLogin }) => { // 1. استلام الدالة onLogin كـ Prop
-    const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
@@ -20,7 +20,7 @@ const handleLogin = async (e) => {
         const response = await axios.post(
             'https://education-scj0.onrender.com/api/auth/login',
             {
-                email: email.trim(),
+                phone: phone.trim(),
                 password: password,
                 // أضف هذا السطر؛ السيرفر يرفض الطلب بدونه (خطأ 400)
                 device_id: "web_browser_access" 
@@ -67,15 +67,15 @@ const handleLogin = async (e) => {
 
                 <form onSubmit={handleLogin} className="space-y-6">
                     <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-2">البريد الإلكتروني</label>
+                        <label className="block text-sm font-medium text-slate-700 mb-2">الهاتف</label>
                         <div className="relative">
                             <Mail className="absolute right-3 top-3 text-slate-400" size={20} />
                             <input 
-                                type="email" 
+                                type="phone" 
                                 required
                                 className="w-full pr-10 pl-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-right"
-                                placeholder="example@mail.com"
-                                value={email}
+                                placeholder="09xxxxxxxx"
+                                value={phone}
                                 onChange={(e) => setEmail(e.target.value)}
                             />
                         </div>
