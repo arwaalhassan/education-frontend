@@ -18,7 +18,7 @@ const handleLogin = async (e) => {
 
     try {
         const response = await axios.post(
-            'http://72.61.178.147/api/auth/login',
+            'https://education-scj0.onrender.com/api/auth/login',
             {
                 email: email.trim(),
                 password: password,
