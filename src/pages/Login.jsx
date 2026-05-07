@@ -71,12 +71,12 @@ const handleLogin = async (e) => {
                         <div className="relative">
                             <Mail className="absolute right-3 top-3 text-slate-400" size={20} />
                             <input 
-                                type="phone" 
+                                type="tel" 
                                 required
                                 className="w-full pr-10 pl-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all text-right"
                                 placeholder="09xxxxxxxx"
                                 value={phone}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) => setPhone(e.target.value)}
                             />
                         </div>
                     </div>
