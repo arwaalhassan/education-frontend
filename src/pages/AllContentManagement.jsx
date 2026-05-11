@@ -26,7 +26,19 @@ const AllContentManagement = () => {
             setLoading(false);
         }
     };
-
+// وظيفة تصدير البيانات لملف Excel/CSV بسيط
+    const handleExport = (course) => {
+        const csvContent = "data:text/csv;charset=utf-8," 
+            + "ID,Title,Instructor\n"
+            + `${course.id},${course.title},${course.instructor_name || 'Admin'}`;
+        
+        const encodedUri = encodeURI(csvContent);
+        const link = document.createElement("a");
+        link.setAttribute("href", encodedUri);
+        link.setAttribute("download", `course_${course.id}_info.csv`);
+        document.body.appendChild(link);
+        link.click();
+    };
     const handleDeleteCourse = async (id) => {
         if (window.confirm("هل أنت متأكد من حذف هذا الكورس وكل محتوياته (دروس، اختبارات) نهائياً؟")) {
             try {
@@ -109,16 +121,31 @@ const AllContentManagement = () => {
                                     <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
                                         <GraduationCap size={32} />
                                     </div>
-                                    <div>
-                                        <h3 className="font-black text-xl text-slate-800">{course.title}</h3>
-                                        <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                                            <span className="flex items-center gap-1 bg-slate-100 px-2 py-0.5 rounded-md">ID: {course.id}</span>
-                                            <span className="font-medium text-blue-600">بواسطة: {course.instructor_name || 'أدمن المنصة'}</span>
-                                        </div>
-                                    </div>
+                                    <div className="max-w-6xl mx-auto grid grid-cols-1 gap-5">
+                {filteredCourses.map(course => (
+                    <div key={course.id} className="bg-white p-6 rounded-[25px] shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center group hover:shadow-md transition-all">
+                        <div className="flex items-center gap-5 mb-4 lg:mb-0">
+                            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
+                                <GraduationCap size={32} />
+                            </div>
+                            <div>
+                                <h3 className="font-black text-xl text-slate-800">{course.title}</h3>
+                                <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
+                                    <span className="bg-slate-100 px-2 py-0.5 rounded-md">ID: {course.id}</span>
+                                    <span className="text-blue-600 font-bold">المدرب: {course.instructor_name || 'الأدمن'}</span>
                                 </div>
-                                
-                                <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto justify-center">
+                            </div>
+                        </div>
+
+                        <div className="flex flex-wrap items-center gap-2">
+                            {/* زر الطلاب المشتركين - جديد */}
+                            <button 
+                                onClick={() => navigate(`/admin/course/${course.id}/students`)}
+                                className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"
+                            >
+                                <Users size={18} />
+                                <span>الطلاب</span>
+                            </button>
                                     {/* زر إدارة الاختبارات - الرابط الأساسي الذي طلبته */}
                                     <button 
                                         onClick={() => navigate(`/admin/course/${course.id}/quizzes`)}
@@ -135,6 +162,14 @@ const AllContentManagement = () => {
                                     <BookOpen size={20} />
                                     <span>الدروس</span>
                                     </button>
+                            {/* زر تصدير البيانات - جديد */}
+                            <button 
+                                onClick={() => handleExport(course)}
+                                className="p-2 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-600 hover:text-white transition-all border border-orange-100"
+                                title="تصدير بيانات الكورس"
+                            >
+                                <Download size={20} />
+                            </button>
                                     {/* زر التعديل */}
                                     <button 
                                         onClick={() => navigate(`/edit-course/${course.id}`)}
