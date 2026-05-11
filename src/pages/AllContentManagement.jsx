@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import api from '../services/api';
-import { BookOpen, Pencil, Trash2, FileText, Plus, Search, Loader2, GraduationCap } from 'lucide-react';
+// أضفنا Users و Download هنا
+import { BookOpen, Pencil, Trash2, FileText, Plus, Search, Loader2, GraduationCap, Users, Download } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
 
 const AllContentManagement = () => {
@@ -9,7 +10,6 @@ const AllContentManagement = () => {
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
 
-    // جلب البيانات عند فتح الصفحة
     useEffect(() => {
         fetchData();
     }, []);
@@ -26,7 +26,7 @@ const AllContentManagement = () => {
             setLoading(false);
         }
     };
-// وظيفة تصدير البيانات لملف Excel/CSV بسيط
+
     const handleExport = (course) => {
         const csvContent = "data:text/csv;charset=utf-8," 
             + "ID,Title,Instructor\n"
@@ -38,9 +38,11 @@ const AllContentManagement = () => {
         link.setAttribute("download", `course_${course.id}_info.csv`);
         document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link); // تنظيف الـ DOM بعد الضغط
     };
+
     const handleDeleteCourse = async (id) => {
-        if (window.confirm("هل أنت متأكد من حذف هذا الكورس وكل محتوياته (دروس، اختبارات) نهائياً؟")) {
+        if (window.confirm("هل أنت متأكد من حذف هذا الكورس وكل محتوياته نهائياً؟")) {
             try {
                 await api.delete(`/courses/${id}`);
                 setCourses(courses.filter(c => c.id !== id));
@@ -57,7 +59,7 @@ const AllContentManagement = () => {
 
     if (loading) {
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen">
+            <div className="flex flex-col items-center justify-center min-h-screen text-right" dir="rtl">
                 <Loader2 className="animate-spin text-blue-600 mb-2" size={40} />
                 <p className="text-gray-500 font-bold">جاري تحميل محتوى المنصة...</p>
             </div>
@@ -66,11 +68,11 @@ const AllContentManagement = () => {
 
     return (
         <div className="p-8 bg-gray-50 min-h-screen text-right font-sans" dir="rtl">
-            {/* الهيدر: العنوان + الأزرار */}
+            {/* Header Section */}
             <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6 mb-10">
                 <div>
                     <h1 className="text-3xl font-black text-slate-800 flex items-center gap-3">
-                        <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200">
+                        <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg">
                              <BookOpen size={28} />
                         </div>
                         إدارة المحتوى التعليمي
@@ -79,20 +81,19 @@ const AllContentManagement = () => {
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
-                    {/* حقل البحث */}
-                    <div className="relative group min-w-75">
+                    <div className="relative group min-w-[300px]">
                         <Search className="absolute right-4 top-3 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={20} />
                         <input 
                             type="text" 
                             placeholder="ابحث عن اسم الكورس..." 
-                            className="w-full pr-12 pl-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-50/50 focus:border-blue-400 outline-none transition-all shadow-sm"
+                            className="w-full pr-12 pl-4 py-3 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-blue-50/50 outline-none transition-all"
                             onChange={(e) => setSearchTerm(e.target.value)}
                         />
                     </div>
 
                     <button 
                         onClick={() => navigate('/add-course')}
-                        className="bg-slate-900 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-black transition-all shadow-xl active:scale-95"
+                        className="bg-slate-900 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-95 shadow-lg"
                     >
                         <Plus size={22} />
                         <span className="font-bold">كورس جديد</span>
@@ -100,92 +101,81 @@ const AllContentManagement = () => {
                 </div>
             </div>
 
-            {/* شبكة عرض الكورسات */}
+            {/* Courses List */}
             <div className="max-w-6xl mx-auto">
                 {filteredCourses.length === 0 ? (
                     <div className="bg-white p-20 rounded-[30px] border-2 border-dashed border-slate-200 text-center">
-                        <div className="bg-slate-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Search className="text-slate-300" size={40} />
-                        </div>
+                        <Search className="text-slate-300 mx-auto mb-4" size={40} />
                         <h3 className="text-xl font-bold text-slate-700">لا توجد نتائج!</h3>
-                        <p className="text-slate-400 mt-2">لم نجد أي كورس يطابق بحثك حالياً</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-5">
                         {filteredCourses.map(course => (
-                            <div 
-                                key={course.id} 
-                                className="bg-white p-6 rounded-[25px] shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center group hover:shadow-xl hover:shadow-blue-900/5 transition-all duration-300"
-                            >
-                                <div className="flex items-center gap-5 mb-4 lg:mb-0">
-                                    <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors duration-300">
+                            <div key={course.id} className="bg-white p-6 rounded-[25px] shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center hover:shadow-md transition-all group">
+                                <div className="flex items-center gap-5 mb-4 lg:mb-0 w-full lg:w-auto">
+                                    <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
                                         <GraduationCap size={32} />
                                     </div>
-                                    <div className="max-w-6xl mx-auto grid grid-cols-1 gap-5">
-                {filteredCourses.map(course => (
-                    <div key={course.id} className="bg-white p-6 rounded-[25px] shadow-sm border border-slate-100 flex flex-col lg:flex-row justify-between items-center group hover:shadow-md transition-all">
-                        <div className="flex items-center gap-5 mb-4 lg:mb-0">
-                            <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-all">
-                                <GraduationCap size={32} />
-                            </div>
-                            <div>
-                                <h3 className="font-black text-xl text-slate-800">{course.title}</h3>
-                                <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
-                                    <span className="bg-slate-100 px-2 py-0.5 rounded-md">ID: {course.id}</span>
-                                    <span className="text-blue-600 font-bold">المدرب: {course.instructor_name || 'الأدمن'}</span>
+                                    <div>
+                                        <h3 className="font-black text-xl text-slate-800">{course.title}</h3>
+                                        <div className="flex items-center gap-4 mt-1 text-sm text-slate-500">
+                                            <span className="bg-slate-100 px-2 py-0.5 rounded-md">ID: {course.id}</span>
+                                            <span className="text-blue-600 font-bold">المدرب: {course.instructor_name || 'الأدمن'}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <div className="flex flex-wrap items-center gap-2">
-                            {/* زر الطلاب المشتركين - جديد */}
-                            <button 
-                                onClick={() => navigate(`/admin/course/${course.id}/students`)}
-                                className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"
-                            >
-                                <Users size={18} />
-                                <span>الطلاب</span>
-                            </button>
-                                    {/* زر إدارة الاختبارات - الرابط الأساسي الذي طلبته */}
+                                <div className="flex flex-wrap items-center justify-center gap-2 w-full lg:w-auto">
+                                    {/* زر الطلاب */}
+                                    <button 
+                                        onClick={() => navigate(`/admin/course/${course.id}/students`)}
+                                        className="flex items-center gap-2 px-4 py-2 bg-emerald-50 text-emerald-700 rounded-xl font-bold hover:bg-emerald-600 hover:text-white transition-all border border-emerald-100"
+                                    >
+                                        <Users size={18} />
+                                        <span>الطلاب</span>
+                                    </button>
+
+                                    {/* زر الاختبارات */}
                                     <button 
                                         onClick={() => navigate(`/admin/course/${course.id}/quizzes`)}
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-purple-50 text-purple-700 rounded-2xl font-bold hover:bg-purple-600 hover:text-white transition-all duration-200 border border-purple-100"
+                                        className="flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-xl font-bold hover:bg-purple-600 hover:text-white transition-all border border-purple-100"
                                     >
-                                        <FileText size={20} />
+                                        <FileText size={18} />
                                         <span>الاختبارات</span>
                                     </button>
-                                    {/* زر إدارة الدروس - أضيفيه بجانب زر الاختبارات */}
+
+                                    {/* زر الدروس */}
                                     <button 
                                         onClick={() => navigate(`/admin/course/${course.id}/lessons`)}
-                                        className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-3 bg-blue-50 text-blue-700 rounded-2xl font-bold hover:bg-blue-600 hover:text-white transition-all duration-200 border border-blue-100"
+                                        className="flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-xl font-bold hover:bg-blue-600 hover:text-white transition-all border border-blue-100"
                                     >
-                                    <BookOpen size={20} />
-                                    <span>الدروس</span>
+                                        <BookOpen size={18} />
+                                        <span>الدروس</span>
                                     </button>
-                            {/* زر تصدير البيانات - جديد */}
-                            <button 
-                                onClick={() => handleExport(course)}
-                                className="p-2 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-600 hover:text-white transition-all border border-orange-100"
-                                title="تصدير بيانات الكورس"
-                            >
-                                <Download size={20} />
-                            </button>
+
+                                    {/* زر التصدير */}
+                                    <button 
+                                        onClick={() => handleExport(course)}
+                                        className="p-2.5 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-600 hover:text-white transition-all border border-orange-100"
+                                        title="تصدير بيانات الكورس"
+                                    >
+                                        <Download size={20} />
+                                    </button>
+
                                     {/* زر التعديل */}
                                     <button 
                                         onClick={() => navigate(`/edit-course/${course.id}`)}
-                                        className="p-3 bg-blue-50 text-blue-600 rounded-2xl hover:bg-blue-600 hover:text-white transition-all duration-200 border border-blue-100"
-                                        title="تعديل الكورس"
+                                        className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
                                     >
-                                        <Pencil size={22} />
+                                        <Pencil size={20} />
                                     </button>
 
                                     {/* زر الحذف */}
                                     <button 
                                         onClick={() => handleDeleteCourse(course.id)}
-                                        className="p-3 bg-red-50 text-red-500 rounded-2xl hover:bg-red-500 hover:text-white transition-all duration-200 border border-red-100"
-                                        title="حذف الكورس"
+                                        className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all"
                                     >
-                                        <Trash2 size={22} />
+                                        <Trash2 size={20} />
                                     </button>
                                 </div>
                             </div>
