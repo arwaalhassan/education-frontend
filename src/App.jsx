@@ -16,6 +16,7 @@ import AllContentManagement from './pages/AllContentManagement';
 import StudentResults from './pages/StudentResults'; 
 import CourseLessons from './pages/CourseLessons';
 import CouponManager from './pages/CouponManager'; 
+import CourseStudents from './pages/CourseStudents';
 function App() {
   const [token, setToken] = useState(localStorage.getItem('token'));
   const [user, setUser] = useState(() => {
@@ -90,6 +91,11 @@ function App() {
               path="/admin/course/:courseId/lessons" 
               element={<AdminOrTeacherRoute><CourseLessons /></AdminOrTeacherRoute>} 
             />
+            {/* إضافة مسار إدارة الطلاب المسجلين في كورس معين */}
+           <Route 
+            path="/admin/course/:courseId/students" 
+            element={<AdminOrTeacherRoute><CourseStudents /></AdminOrTeacherRoute>} 
+           />
             {/* إدارة الاختبارات */}
             <Route path="/create-quiz/:courseId" element={<AdminOrTeacherRoute><CreateQuiz /></AdminOrTeacherRoute>} />
             <Route path="/admin/course/:courseId/quizzes" element={<AdminOrTeacherRoute><AllQuizzes /></AdminOrTeacherRoute>} />
