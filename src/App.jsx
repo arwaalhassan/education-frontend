@@ -53,7 +53,9 @@ function App() {
 
   const AdminOrTeacherRoute = ({ children }) => {
     if (!token) return <Navigate to="/login" />;
-    if (user?.role !== 'admin' && user?.role !== 'teacher') return <Navigate to="/" />;
+    // السماح للأدمن والمعلم والموظف بالدخول
+  const allowedRoles = ['admin', 'teacher', 'employee'];
+  if (!allowedRoles.includes(user?.role)) return <Navigate to="/" />;
     return children;
   };
 
