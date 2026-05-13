@@ -44,11 +44,16 @@ const CreateQuiz = () => {
     const addQuestionField = () => {
         setQuestions([...questions, { 
             question_text: '', 
-            option_a: '', 
-            option_b: '', 
-            option_c: '', 
-            option_d: '', 
-            correct_answer: 'A' 
+        question_image: '', // حقل صورة السؤال
+        option_a: '', 
+        option_a_image: '', // حقل صورة الخيار A
+        option_b: '', 
+        option_b_image: '', // حقل صورة الخيار B
+        option_c: '', 
+        option_c_image: '', // حقل صورة الخيار C
+        option_d: '', 
+        option_d_image: '', // حقل صورة الخيار D
+        correct_answer: 'A'
         }]);
     };
 
@@ -176,46 +181,40 @@ const CreateQuiz = () => {
                 </div>
             </div>
 
-            {/* قائمة الأسئلة */}
+            {/* الأسئلة */}
             <div className="space-y-8">
                 {questions.map((q, index) => (
-                    <div key={index} className="p-8 border-2 border-slate-100 rounded-4xl bg-white relative hover:border-blue-200 transition-colors group shadow-sm">
+                    <div key={index} className="p-8 border-2 border-slate-100 rounded-4xl bg-white relative hover:border-blue-200 transition-colors shadow-sm">
                         <div className="flex justify-between items-center mb-6">
-                            <span className="bg-slate-900 text-white px-5 py-1.5 rounded-full text-xs font-black shadow-lg">
-                                الســـــؤال {index + 1}
-                            </span>
-                            <button 
-                                onClick={() => removeQuestion(index, q.id)}
-                                className="text-red-400 hover:text-red-600 transition-all flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-xl group-hover:opacity-100 md:opacity-0"
-                            >
-                                <Trash2 size={18} /> <span className="text-xs font-black">حذف السؤال</span>
+                            <span className="bg-slate-900 text-white px-5 py-1.5 rounded-full text-xs font-black shadow-lg">الســـــؤال {index + 1}</span>
+                            <button onClick={() => removeQuestion(index, q.id)} className="text-red-400 hover:text-red-600 transition-all flex items-center gap-1 bg-red-50 px-3 py-1.5 rounded-xl">
+                                <Trash2 size={18} /> <span className="text-xs font-black">حذف</span>
                             </button>
                         </div>
                         
-                        <div className="space-y-2 mb-6">
-                            <label className="text-xs font-black text-slate-400 mr-2">نص السؤال</label>
-                            <textarea 
-                                placeholder="اكتب سؤالك هنا..."
-                                className="w-full p-5 rounded-2xl bg-slate-50 border-2 border-slate-50 focus:border-blue-200 focus:bg-white transition-all outline-none min-h-25 text-lg font-bold text-slate-800"
-                                value={q.question_text}
-                                onChange={(e) => updateQuestion(index, 'question_text', e.target.value)}
-                            />
+                        {/* نص وصورة السؤال */}
+                        <div className="space-y-4 mb-6">
+                            <div>
+                                <label className="text-xs font-black text-slate-400 mr-2">نص السؤال (يدعم **التسميك**)</label>
+                                <textarea className="w-full p-5 rounded-2xl bg-slate-50 border-2 border-slate-50 focus:border-blue-200 focus:bg-white transition-all outline-none min-h-25 text-lg font-bold text-slate-800" value={q.question_text} onChange={(e) => updateQuestion(index, 'question_text', e.target.value)} />
+                            </div>
+                            <div>
+                                <label className="text-xs font-black text-slate-400 mr-2 flex items-center gap-1"><ImageIcon size={14}/> رابط صورة السؤال (اختياري)</label>
+                                <input type="text" placeholder="https://..." className="w-full p-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-blue-200 outline-none text-sm" value={q.question_image || ''} onChange={(e) => updateQuestion(index, 'question_image', e.target.value)} />
+                            </div>
                         </div>
 
-                        {/* قسم الخيارات */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* الخيارات */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             {['a', 'b', 'c', 'd'].map((char) => (
-                                <div key={char} className="relative group/option">
-                                    <div className="absolute right-4 top-1/2 -translate-y-1/2 bg-white w-8 h-8 rounded-lg flex items-center justify-center shadow-sm border border-slate-100 text-blue-600 font-black">
-                                        {char.toUpperCase()}
+                                <div key={char} className="space-y-2 p-3 bg-slate-50/50 rounded-2xl border border-slate-100">
+                                    <div className="relative">
+                                        <div className="absolute right-3 top-1/2 -translate-y-1/2 bg-white w-7 h-7 rounded-lg flex items-center justify-center shadow-sm border border-slate-100 text-blue-600 font-black text-xs">
+                                            {char.toUpperCase()}
+                                        </div>
+                                        <input type="text" placeholder={`نص الخيار ${char.toUpperCase()}`} className="w-full pr-12 pl-4 py-3 bg-white rounded-xl border-2 border-transparent focus:border-blue-100 transition-all outline-none font-medium text-slate-700" value={q[`option_${char}`]} onChange={(e) => updateQuestion(index, `option_${char}`, e.target.value)} />
                                     </div>
-                                    <input 
-                                        type="text" 
-                                        placeholder={`الخيار ${char.toUpperCase()}`}
-                                        className="w-full pr-14 pl-4 py-4 bg-slate-50 rounded-2xl border-2 border-transparent focus:border-blue-100 focus:bg-white transition-all outline-none font-medium text-slate-700"
-                                        value={q[`option_${char}`]}
-                                        onChange={(e) => updateQuestion(index, `option_${char}`, e.target.value)}
-                                    />
+                                    <input type="text" placeholder={`رابط صورة الخيار ${char.toUpperCase()}`} className="w-full p-2 px-4 rounded-lg bg-white border border-slate-100 focus:border-blue-100 outline-none text-[10px] font-medium" value={q[`option_${char}_image`] || ''} onChange={(e) => updateQuestion(index, `option_${char}_image`, e.target.value)} />
                                 </div>
                             ))}
                         </div>
