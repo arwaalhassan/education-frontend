@@ -296,7 +296,7 @@ const UsersControl = () => {
                                             <SmartphoneNfc size={18} />
                                         </button>
                                         {/* حذف */}
-                                        {isAdmin ? (
+                                        {isAdmin && (
                                         <button
                                             onClick={() => handleDeleteUser(user.id, user.full_name)}
                                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
