@@ -7,6 +7,10 @@ import {
 import * as XLSX from "xlsx";
 
 const UsersControl = () => {
+    // جلب بيانات المستخدم الحالي لمعرفة رتبته
+    const currentUser = JSON.parse(localStorage.getItem('user')) || {};
+    const isAdmin = currentUser.role === 'admin';
+    const isEmployee = currentUser.role === 'employee';
     const [roleFilter, setRoleFilter] = useState('all');
     const [users, setUsers] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -120,7 +124,7 @@ const UsersControl = () => {
                 ...newUser,
                 is_active: 1,
                 // إذا كان المضاف آدمن، نعتبره مفعلاً فوراً في الواجهة
-                is_verified: (newUser.role === 'admin' || newUser.role === 'teacher') ? 1 : 0,
+                is_verified: (newUser.role === 'admin' || newUser.role === 'teacher' || newUser.role === 'employee') ? 1 : 0,
                 verification_code: res.data.verificationCode || '---'
             };
 
@@ -198,12 +202,14 @@ const UsersControl = () => {
 >
     تصدير Excel
 </button>
+                    {isAdmin && (
                     <button
                         onClick={() => setShowAddModal(true)}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
                     >
                         <UserPlus size={18} /> إضافة مستخدم
                     </button>
+    )}
                 </div>
             </div>
 
@@ -290,6 +296,7 @@ const UsersControl = () => {
                                             <SmartphoneNfc size={18} />
                                         </button>
                                         {/* حذف */}
+                                        {isAdmin ? (
                                         <button
                                             onClick={() => handleDeleteUser(user.id, user.full_name)}
                                             className="p-2 text-red-600 hover:bg-red-50 rounded-lg"
@@ -297,6 +304,7 @@ const UsersControl = () => {
                                         >
                                             <Trash2 size={18} />
                                         </button>
+                                )}
                                     </div>
                                 </td>
                             </tr>
