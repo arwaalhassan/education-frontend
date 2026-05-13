@@ -20,10 +20,10 @@ const Sidebar = ({ onLogout }) => {
     { name: 'الرئيسية', path: '/', icon: LayoutDashboard, roles: ['admin', 'teacher'] },
     { name: 'إضافة كورس', path: '/add-course', icon: PlusCircle, roles: ['teacher'] },
     { name: 'كورساتي', path: '/my-courses', icon: BookOpen, roles: ['teacher'] },
-    { name: 'إدارة الطلاب', path: '/admin/students', icon: UserCheck, roles: ['admin'] },
+    { name: 'إدارة الطلاب', path: '/admin/students', icon: UserCheck, roles: ['admin', 'employee'] },
     // تم إصلاح عنصر نتائج الطلاب هنا ليتوافق مع باقي العناصر
     { name: 'نتائج الطلاب', path: '/admin/results', icon: ClipboardCheck, roles: ['admin', 'teacher'] },
-    { name: 'إدارة المستخدمين', path: '/admin/users', icon: Users, roles: ['admin'] },
+    { name: 'إدارة المستخدمين', path: '/admin/users', icon: Users, roles: ['admin', 'employee'] },
     { name: 'إدارة الإعلانات', path: '/admin/announcements', icon: Megaphone, roles: ['admin'] },
     { name: 'الأرباح والتقارير', path: '/reports', icon: DollarSign, roles: ['admin'] },
     { name: 'إدارة الكوبونات', path: '/admin/coupons', icon: Ticket, roles: ['admin'] },
