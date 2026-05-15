@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api'; 
 import { PlusCircle, Save, Trash2, Clock, FileText, ArrowRight, Loader2, Image as ImageIcon } from 'lucide-react';
+import imageCompression from 'browser-image-compression';
 
 const CreateQuiz = () => {
     // 1. استخراج المعرفات من الرابط
@@ -63,16 +64,32 @@ const CreateQuiz = () => {
         setQuestions(updatedQs);
     };
 // الدالة الجديدة للتعامل مع "اللصق"
-const handlePasteImage = (index, field, e) => {
-    const item = e.clipboardData.items[0]; // جلب البيانات من الحافظة
+const handlePasteImage = async (index, field, e) => {
+    const item = e.clipboardData.items[0];
     if (item && item.type.indexOf("image") !== -1) {
-        const blob = item.getAsFile(); // تحويلها لملف
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            // تحديث الحقل بنص الصورة (Base64)
-            updateQuestion(index, field, event.target.result);
+        const imageFile = item.getAsFile();
+        
+        // إعدادات الضغط
+        const options = {
+            maxSizeMB: 0.1,          // أقصى حجم للصورة 100 كيلوبايت (ممتاز للفلوتر)
+            maxWidthOrHeight: 800,   // أقصى عرض أو طول 800 بكسل (كافٍ جداً للجوال)
+            useWebWorker: true,
         };
-        reader.readAsDataURL(blob);
+
+        try {
+            // عملية الضغط
+            const compressedFile = await imageCompression(imageFile, options);
+            
+            // تحويل الصورة المضغوطة إلى Base64
+            const reader = new FileReader();
+            reader.readAsDataURL(compressedFile);
+            reader.onloadend = () => {
+                const base64data = reader.result;
+                updateQuestion(index, field, base64data);
+            };
+        } catch (error) {
+            console.error("خطأ في ضغط الصورة:", error);
+        }
     }
 };
     const removeQuestion = async (index, qId) => {
