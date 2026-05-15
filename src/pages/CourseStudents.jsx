@@ -41,7 +41,7 @@ const fetchStudents = async () => {
         setError(null);
         // التعديل: إزالة /admin وإضافة الترتيب الصحيح للمسار
         // نفترض هنا أن ملف routes/student.js مربوط في server.js بمسار '/api/students'
-        const res = await api.get(`/students/course/${courseId}/students`);
+        const res = await api.get(`/student/course/${courseId}/students`);
         
         setStudents(res.data);
     } catch (err) {
@@ -59,7 +59,7 @@ const fetchStudentLogs = async (student) => {
         setIsLogsLoading(true);
         setShowLogsModal(true);
         // التعديل: المسار ليطابق router.get('/course/:courseId/student/:studentId/logs')
-        const res = await api.get(`/students/course/${courseId}/student/${student.id}/logs`);
+        const res = await api.get(`/student/course/${courseId}/student/${student.id}/logs`);
         setSelectedStudentLogs(res.data);
     } catch (err) {
         console.error("خطأ في السجلات:", err);
@@ -74,7 +74,7 @@ const handleUnenroll = async (userId) => {
     if (window.confirm("هل أنت متأكد؟")) {
         try {
             // التعديل: المسار ليطابق router.post('/unenroll-student')
-            await api.post('/students/unenroll-student', { userId, courseId });
+            await api.post('/student/unenroll-student', { userId, courseId });
             setStudents(students.filter(s => s.id !== userId));
         } catch (err) {
             alert("حدث خطأ أثناء إلغاء الاشتراك");
