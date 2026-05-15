@@ -41,28 +41,28 @@ const AllQuizzes = () => {
         }
     };
 const handleDeleteQuiz = async (quizId) => {
-    if (!window.confirm("هل أنت متأكد من حذف هذا الاختبار نهائياً؟")) return;
+    // 1. رسالة تأكيد للمستخدم
+    if (!window.confirm("هل أنت متأكد من حذف هذا الاختبار نهائياً؟ سيتم حذف جميع الأسئلة والنتائج المرتبطة به.")) return;
 
     try {
-        const response = await axios.delete(`/api/quizzes/${quizId}`, {
-            headers: { Authorization: `Bearer ${token}` }
-        });
+        // 2. استخدام api المستورد في مشروعك بدلاً من axios الخام
+        // المسار يفترض أنه /quizzes/:id بناءً على إعدادات الـ Backend لديك
+        const response = await api.delete(`/quizzes/${quizId}`);
+
+        // 3. نجاح الحذف
+        alert(response.data.message || "تم حذف الاختبار بنجاح");
         
-        // إذا نجح الحذف
-        alert(response.data.message || "تم الحذف بنجاح");
-        // تحديث الحالة في الواجهة
+        // 4. تحديث الواجهة فوراً لإزالة الاختبار المحذوف من القائمة
         setQuizzes(prevQuizzes => prevQuizzes.filter(q => q.id !== quizId));
 
     } catch (error) {
         console.error("Delete Error:", error);
         
-        // التحقق من وجود رد من السيرفر لتجنب خطأ undefined
+        // 5. معالجة الأخطاء بشكل آمن
         if (error.response && error.response.data) {
-            alert("خطأ من السيرفر: " + error.response.data.message);
-        } else if (error.request) {
-            alert("لا يوجد رد من السيرفر، تأكد من اتصال الإنترنت أو حالة السيرفر");
+            alert("خطأ: " + error.response.data.message);
         } else {
-            alert("حدث خطأ غير متوقع: " + error.message);
+            alert("فشل الاتصال بالسيرفر، تأكد من أنك أضفت مسار الحذف في الـ Backend");
         }
     }
 };
@@ -174,11 +174,13 @@ const handleDeleteQuiz = async (quizId) => {
                                             <Edit size={18} />
                                             تعديل الأسئلة
                                         </button>
-                                        <button 
+                                       <button 
     onClick={() => handleDeleteQuiz(quiz.id)}
-    className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+    className="bg-red-50 text-red-600 border border-red-100 px-4 py-3 rounded-2xl font-bold hover:bg-red-600 hover:text-white transition-all active:scale-95 flex items-center gap-2"
+    title="حذف الاختبار"
 >
-    حذف الاختبار
+    <AlertTriangle size={18} />
+    حذف
 </button>
                                     </div>
                                 </div>
