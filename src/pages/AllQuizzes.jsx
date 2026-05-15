@@ -41,16 +41,28 @@ const AllQuizzes = () => {
         }
     };
 const handleDeleteQuiz = async (quizId) => {
-    if (window.confirm("هل أنت متأكد من حذف هذا الاختبار نهائياً؟ سيتم حذف جميع الأسئلة والنتائج المرتبطة به.")) {
-        try {
-            const response = await axios.delete(`/api/quizzes/${quizId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            alert(response.data.message);
-            // هنا يجب تحديث القائمة في الواجهة (مثلاً إعادة طلب البيانات أو تصفية المصفوفة)
-            setQuizzes(quizzes.filter(q => q.id !== quizId));
-        } catch (error) {
-            alert("خطأ في حذف الاختبار: " + error.response.data.message);
+    if (!window.confirm("هل أنت متأكد من حذف هذا الاختبار نهائياً؟")) return;
+
+    try {
+        const response = await axios.delete(`/api/quizzes/${quizId}`, {
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        
+        // إذا نجح الحذف
+        alert(response.data.message || "تم الحذف بنجاح");
+        // تحديث الحالة في الواجهة
+        setQuizzes(prevQuizzes => prevQuizzes.filter(q => q.id !== quizId));
+
+    } catch (error) {
+        console.error("Delete Error:", error);
+        
+        // التحقق من وجود رد من السيرفر لتجنب خطأ undefined
+        if (error.response && error.response.data) {
+            alert("خطأ من السيرفر: " + error.response.data.message);
+        } else if (error.request) {
+            alert("لا يوجد رد من السيرفر، تأكد من اتصال الإنترنت أو حالة السيرفر");
+        } else {
+            alert("حدث خطأ غير متوقع: " + error.message);
         }
     }
 };
