@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api'; 
-import { PlusCircle, Save, Trash2, Clock, FileText, ArrowRight, Loader2 } from 'lucide-react';
+import { PlusCircle, Save, Trash2, Clock, FileText, ArrowRight, Loader2, Image as ImageIcon } from 'lucide-react';
 
 const CreateQuiz = () => {
     // 1. استخراج المعرفات من الرابط
