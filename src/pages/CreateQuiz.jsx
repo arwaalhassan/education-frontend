@@ -62,7 +62,19 @@ const CreateQuiz = () => {
         updatedQs[index][field] = value;
         setQuestions(updatedQs);
     };
-
+// الدالة الجديدة للتعامل مع "اللصق"
+const handlePasteImage = (index, field, e) => {
+    const item = e.clipboardData.items[0]; // جلب البيانات من الحافظة
+    if (item && item.type.indexOf("image") !== -1) {
+        const blob = item.getAsFile(); // تحويلها لملف
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            // تحديث الحقل بنص الصورة (Base64)
+            updateQuestion(index, field, event.target.result);
+        };
+        reader.readAsDataURL(blob);
+    }
+};
     const removeQuestion = async (index, qId) => {
         if (isEditMode && qId) {
             if (!window.confirm("هل تريد حذف هذا السؤال نهائياً من قاعدة البيانات؟")) return;
@@ -198,10 +210,20 @@ const CreateQuiz = () => {
                                 <label className="text-xs font-black text-slate-400 mr-2">نص السؤال (يدعم **التسميك**)</label>
                                 <textarea className="w-full p-5 rounded-2xl bg-slate-50 border-2 border-slate-50 focus:border-blue-200 focus:bg-white transition-all outline-none min-h-25 text-lg font-bold text-slate-800" value={q.question_text} onChange={(e) => updateQuestion(index, 'question_text', e.target.value)} />
                             </div>
-                            <div>
-                                <label className="text-xs font-black text-slate-400 mr-2 flex items-center gap-1"><ImageIcon size={14}/> رابط صورة السؤال (اختياري)</label>
-                                <input type="text" placeholder="https://..." className="w-full p-3 rounded-xl bg-slate-50 border-2 border-slate-100 focus:border-blue-200 outline-none text-sm" value={q.question_image || ''} onChange={(e) => updateQuestion(index, 'question_image', e.target.value)} />
-                            </div>
+                           <div>
+    <label className="text-xs font-black text-slate-400 mr-2 flex items-center gap-1">
+        <ImageIcon size={14}/> صورة السؤال (انسخ صورة والصقها هنا)
+    </label>
+    <input 
+        type="text" 
+        placeholder="اضغط هنا ثم اضغط Ctrl+V للصق صورة" 
+        className="w-full p-3 rounded-xl bg-blue-50 border-2 border-blue-100 focus:border-blue-400 outline-none text-sm font-medium" 
+        value={q.question_image || ''} 
+        onChange={(e) => updateQuestion(index, 'question_image', e.target.value)}
+        onPaste={(e) => handlePasteImage(index, 'question_image', e)} // تفعيل اللصق
+    />
+    {q.question_image && <img src={q.question_image} alt="preview" className="mt-2 h-20 rounded-lg border shadow-sm" />}
+</div>
                         </div>
 
                         {/* الخيارات */}
@@ -214,8 +236,14 @@ const CreateQuiz = () => {
                                         </div>
                                         <input type="text" placeholder={`نص الخيار ${char.toUpperCase()}`} className="w-full pr-12 pl-4 py-3 bg-white rounded-xl border-2 border-transparent focus:border-blue-100 transition-all outline-none font-medium text-slate-700" value={q[`option_${char}`]} onChange={(e) => updateQuestion(index, `option_${char}`, e.target.value)} />
                                     </div>
-                                    <input type="text" placeholder={`رابط صورة الخيار ${char.toUpperCase()}`} className="w-full p-2 px-4 rounded-lg bg-white border border-slate-100 focus:border-blue-100 outline-none text-[10px] font-medium" value={q[`option_${char}_image`] || ''} onChange={(e) => updateQuestion(index, `option_${char}_image`, e.target.value)} />
-                                </div>
+<input 
+    type="text" 
+    placeholder="الصق صورة الخيار هنا" 
+    className="w-full p-2 px-4 rounded-lg bg-white border border-slate-100 focus:border-blue-400 outline-none text-[10px] font-medium" 
+    value={q[`option_${char}_image`] || ''} 
+    onChange={(e) => updateQuestion(index, `option_${char}_image`, e.target.value)}
+    onPaste={(e) => handlePasteImage(index, `option_${char}_image`, e)} // تفعيل اللصق
+/>                                </div>
                             ))}
                         </div>
 
