@@ -40,7 +40,20 @@ const AllQuizzes = () => {
             setLoading(false);
         }
     };
-
+const handleDeleteQuiz = async (quizId) => {
+    if (window.confirm("هل أنت متأكد من حذف هذا الاختبار نهائياً؟ سيتم حذف جميع الأسئلة والنتائج المرتبطة به.")) {
+        try {
+            const response = await axios.delete(`/api/quizzes/${quizId}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            alert(response.data.message);
+            // هنا يجب تحديث القائمة في الواجهة (مثلاً إعادة طلب البيانات أو تصفية المصفوفة)
+            setQuizzes(quizzes.filter(q => q.id !== quizId));
+        } catch (error) {
+            alert("خطأ في حذف الاختبار: " + error.response.data.message);
+        }
+    }
+};
     // تصفية الاختبارات بناءً على كلمة البحث (البحث في العنوان أو اسم الكورس)
     const filteredQuizzes = quizzes.filter(q => 
         q.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,6 +162,12 @@ const AllQuizzes = () => {
                                             <Edit size={18} />
                                             تعديل الأسئلة
                                         </button>
+                                        <button 
+    onClick={() => handleDeleteQuiz(quiz.id)}
+    className="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-3 rounded text-xs"
+>
+    حذف الاختبار
+</button>
                                     </div>
                                 </div>
                             </div>
