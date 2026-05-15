@@ -34,46 +34,53 @@ const CourseStudents = () => {
         fetchStudents();
     }, [courseId]);
 
-    const fetchStudents = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-            const res = await api.get(`/admin/courses/${courseId}/students`);
-            setStudents(res.data);
-        } catch (err) {
-            console.error("خطأ في جلب الطلاب:", err);
-            setError("تعذر تحميل قائمة الطلاب، يرجى المحاولة مرة أخرى.");
-        } finally {
-            setLoading(false);
-        }
-    };
+   // 1. جلب قائمة الطلاب
+const fetchStudents = async () => {
+    try {
+        setLoading(true);
+        setError(null);
+        // التعديل: إزالة /admin وإضافة الترتيب الصحيح للمسار
+        // نفترض هنا أن ملف routes/student.js مربوط في server.js بمسار '/api/students'
+        const res = await api.get(`/students/course/${courseId}/students`);
+        
+        setStudents(res.data);
+    } catch (err) {
+        console.error("خطأ في جلب الطلاب:", err);
+        setError("تعذر تحميل قائمة الطلاب، تأكد من مسار السيرفر.");
+    } finally {
+        setLoading(false);
+    }
+};
 
-    const fetchStudentLogs = async (student) => {
-        try {
-            setActiveStudentName(student.full_name);
-            setIsLogsLoading(true);
-            setShowLogsModal(true);
-            const res = await api.get(`/admin/courses/${courseId}/students/${student.id}/logs`);
-            setSelectedStudentLogs(res.data);
-        } catch (err) {
-            console.error("خطأ في جلب سجلات المشاهدة:", err);
-            setSelectedStudentLogs([]);
-        } finally {
-            setIsLogsLoading(false);
-        }
-    };
+// 2. جلب سجلات المشاهدة
+const fetchStudentLogs = async (student) => {
+    try {
+        setActiveStudentName(student.full_name);
+        setIsLogsLoading(true);
+        setShowLogsModal(true);
+        // التعديل: المسار ليطابق router.get('/course/:courseId/student/:studentId/logs')
+        const res = await api.get(`/students/course/${courseId}/student/${student.id}/logs`);
+        setSelectedStudentLogs(res.data);
+    } catch (err) {
+        console.error("خطأ في السجلات:", err);
+        setSelectedStudentLogs([]);
+    } finally {
+        setIsLogsLoading(false);
+    }
+};
 
-    const handleUnenroll = async (userId) => {
-        if (window.confirm("هل أنت متأكد من إلغاء اشتراك هذا الطالب؟ سيفقد الوصول للمحتوى فوراً.")) {
-            try {
-                await api.post('/admin/courses/unenroll', { userId, courseId });
-                setStudents(students.filter(s => s.id !== userId));
-                // يمكن استبدال alert بـ toast لاحقاً لجمالية أكثر
-            } catch (err) {
-                alert("حدث خطأ أثناء محاولة إلغاء الاشتراك");
-            }
+// 3. إلغاء الاشتراك
+const handleUnenroll = async (userId) => {
+    if (window.confirm("هل أنت متأكد؟")) {
+        try {
+            // التعديل: المسار ليطابق router.post('/unenroll-student')
+            await api.post('/students/unenroll-student', { userId, courseId });
+            setStudents(students.filter(s => s.id !== userId));
+        } catch (err) {
+            alert("حدث خطأ أثناء إلغاء الاشتراك");
         }
-    };
+    }
+};
 
     const filteredStudents = students.filter(s => 
         (s.full_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
