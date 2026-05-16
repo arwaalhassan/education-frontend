@@ -11,8 +11,7 @@ import {
     X, 
     Video,
     FolderPlus,
-    Plus,      
-    ChevronDown,
+    Plus,       
     GripVertical,
     Eye
 } from 'lucide-react';
@@ -75,6 +74,8 @@ const CourseLessons = () => {
             const sourceSectionIndex = newSections.findIndex(s => `section-${s.id}` === source.droppableId);
             const destSectionIndex = newSections.findIndex(s => `section-${s.id}` === destination.droppableId);
 
+            if (sourceSectionIndex === -1 || destSectionIndex === -1) return;
+
             const sourceSection = newSections[sourceSectionIndex];
             const destSection = newSections[destSectionIndex];
 
@@ -97,8 +98,9 @@ const CourseLessons = () => {
             handleReorderSave(newSections);
         }
     };
+
     const handleAddSection = async () => {
-        if (!newSectionTitle) return;
+        if (!newSectionTitle.trim()) return;
         try {
             await api.post('/courses/sections', { course_id: courseId, title: newSectionTitle });
             setNewSectionTitle("");
@@ -120,7 +122,7 @@ const CourseLessons = () => {
         if (window.confirm("هل أنت متأكد من حذف هذا الدرس نهائياً؟")) {
             try {
                 await api.delete(`/admin/lessons/${lessonId}`);
-                fetchContent(); // تحديث الهيكلية بالكامل لضمان المزامنة
+                fetchContent(); 
                 alert("تم حذف الدرس بنجاح");
             } catch (err) {
                 console.error("Delete error:", err);
@@ -224,10 +226,10 @@ const CourseLessons = () => {
                                                     </div>
                                                 )}
 
-                                                {/* قائمة الدروس (قابلة للسحب أيضاً) */}
+                                                {/* قائمة الدروس */}
                                                 <Droppable droppableId={`section-${section.id}`} type="LESSON">
                                                     {(provided) => (
-                                                        <div {...provided.droppableProps} ref={provided.innerRef} className="p-4 space-y-2 min-h-[40px]">
+                                                        <div {...provided.droppableProps} ref={provided.innerRef} className="p-4 space-y-2 min-h-[50px]">
                                                             {section.lessons && section.lessons.length > 0 ? (
                                                                 section.lessons.map((lesson, lIndex) => (
                                                                     <Draggable key={lesson.id} draggableId={`lesson-${lesson.id}`} index={lIndex}>
@@ -239,21 +241,23 @@ const CourseLessons = () => {
                                                                                 className="flex items-center justify-between p-4 bg-white border border-transparent hover:border-blue-100 hover:bg-blue-50/20 rounded-2xl transition-all group"
                                                                             >
                                                                                 <div className="flex items-center gap-4">
-                                                                                    <GripVertical size={16} className="text-slate-300 group-hover:text-blue-400" />
+                                                                                    <GripVertical size={16} className="text-slate-300 group-hover:text-blue-400 cursor-grab" />
                                                                                     <div className={`p-2 rounded-lg ${lesson.content_type === 'video' ? 'bg-blue-50 text-blue-500' : 'bg-orange-50 text-orange-500'}`}>
                                                                                         {lesson.content_type === 'video' ? <PlayCircle size={20} /> : <FileText size={20} />}
                                                                                     </div>
-                                                                                    <div>
-                                                                                        <h4 className="font-bold text-slate-700">{lesson.title}</h4>
-                                                                                        {/* 🟢 شارة عرض المشاهدات - تظهر فقط إذا كان الدرس فيديو */}
+                                                                                    <div className="flex flex-col gap-1">
+                                                                                        <h4 className="font-bold text-slate-700 text-right">{lesson.title}</h4>
+                                                                                        <div className="flex items-center gap-2">
+                                                                                            <span className="text-[10px] text-slate-400 uppercase tracking-wider bg-slate-100 px-1.5 py-0.5 rounded">
+                                                                                                {lesson.content_type}
+                                                                                            </span>
                                                                                             {lesson.content_type === 'video' && (
-                                                                                                <div className="flex items-center gap-1 bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-xs font-medium">
+                                                                                                <div className="flex items-center gap-1 text-slate-500 text-xs font-medium">
                                                                                                     <Eye size={12} />
                                                                                                     <span>{lesson.views_count || lesson.views || 0} مشاهدة</span>
                                                                                                 </div>
                                                                                             )}
                                                                                         </div>
-                                                                                        <span className="text-[10px] text-slate-400 uppercase tracking-wider">{lesson.content_type}</span>
                                                                                     </div>
                                                                                 </div>
                                                                                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
