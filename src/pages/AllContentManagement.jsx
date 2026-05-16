@@ -42,55 +42,66 @@ const AllContentManagement = () => {
 
    const handleExportToExcel = async (course) => {
         let lessonsData = [];
+        // تأمين معرف الكورس سواء كان id أو _id حسب بناء الباك إيند الخاص بكِ
+        const courseId = course.id || course._id;
         
-        // التحقق أولاً إذا كانت الدروس مدمجة في الكورس، وإلا نقوم بعمل طلب سريع للباك إيند لجلبها
-        if (course.lessons && Array.isArray(course.lessons)) {
-            lessonsData = course.lessons;
-        } else {
-            try {
-                // طلب الدروس التابعة لهذا الكورس مباشرة لضمان الحصول على البيانات
-                const res = await api.get(`/courses/${course.id}/lessons`);
-                lessonsData = res.data || [];
-            } catch (err) {
-                console.error("لم يتم العثور على دروس مدمجة، سيتم التصدير بالقيم الافتراضية:", err);
-                lessonsData = [];
+        try {
+            // 1. التحقق أولاً إذا كانت الدروس مدمجة مسبقاً وتتضمن مصفوفة صالحة
+            if (course.lessons && Array.isArray(course.lessons) && course.lessons.length > 0) {
+                lessonsData = course.lessons;
+            } else if (courseId) {
+                // 2. إذا لم تكن مدمجة، نقوم بعمل طلب مباشر وجلب الدروس الحقيقية للكورس
+                const res = await api.get(`/courses/${courseId}/lessons`);
+                // دعم التقاط المصفوفة سواء كانت راجعة مباشرة أو داخل كائن data
+                lessonsData = Array.isArray(res.data) ? res.data : (res.data?.lessons || []);
             }
+        } catch (err) {
+            console.error("خطأ أثناء جلب تفاصيل الدروس للتصدير، سيتم الاعتماد على المصفوفة الافتراضية:", err);
+            lessonsData = [];
         }
 
-        // 1. حساب عدد الفيديوهات (الدروس)
+        // 3. حساب عدد الفيديوهات (الأسطر المرجعية للدروس)
         const videosCount = lessonsData.length;
 
-        // 2. حساب إجمالي عدد المشاهدات بناءً على بنية الحقول القادمة من الباك إيند
+        // 4. حساب إجمالي عدد المشاهدات الفعلي مع فحص شامل لكل مسميات الحقول المتوقعة
         const totalViews = lessonsData.reduce((sum, lesson) => {
-            return sum + (lesson.views_count || lesson.views || lesson.watch_count || 0);
+            const views = lesson.views_count ?? lesson.views ?? lesson.watch_count ?? 0;
+            return sum + Number(views);
         }, 0);
 
-        // 3. تحديد اسم الصف الدراسي المقابل للـ ID
+        // 5. تحديد اسم الصف الدراسي المقابل للمُعرف
         const gradeName = gradesList.find(g => g.id === course.grade)?.name || course.grade || 'غير محدد';
 
-        // 4. بناء هيكل البيانات المخصصة لملف الـ Excel
+        // 6. بناء هيكل بيانات ملف الـ Excel المخصص للمنصة
         const excelData = [
             {
-                "ID الكورس": course.id,
-                "اسم الكورس": course.title,
-                "الصف الدراسي": gradeName,
-                "اسم الأستاذ": course.instructor_name || 'الأدمن',
-                "عدد الفيديوهات": videosCount,
-                "إجمالي المشاهدات": totalViews
+                "معرف الكورس (ID)": courseId || 'غير متوفر',
+                "اسم الكورس التعليمي": course.title || 'بدون عنوان',
+                "المرحلة / الصف الدراسي": gradeName,
+                "الأستاذ المحاضر": course.instructor_name || 'الأدمن / إدارة المنصة',
+                "عدد الفيديوهات والدروس": videosCount,
+                "إجمالي مشاهدات الكورس": totalViews,
+                "تاريخ استخراج التقرير": new Date().toLocaleDateString('ar-EG')
             }
         ];
 
-        // 5. إنشاء كتاب عمل (Workbook) وورقة عمل (Worksheet) باستخدام SheetJS
+        // 7. توليد كتاب العمل والورقة باستخدام SheetJS
         const worksheet = XLSX.utils.json_to_sheet(excelData);
         const workbook = XLSX.utils.book_new();
         
-        // دعم اتجاه الشاشة من اليمين إلى اليسار داخل ملف الإكسل ليظهر بشكل متناسق مع اللغة العربية
+        // تفعيل قراءة الملف من اليمين إلى اليسار (RTL) ليظهر بشكل احترافي باللغة العربية
         worksheet['!dir'] = 'rtl';
 
-        XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات الكورس");
+        // ضبط تلقائي لعرض الأعمدة لتجنب تداخل النصوص وتظهر البيانات منسقة
+        const maxKeys = Object.keys(excelData[0]);
+        worksheet['!cols'] = maxKeys.map(key => ({ wch: Math.max(key.length + 10, 20) }));
 
-        // 6. توليد وحفظ ملف الـ Excel باسم الكورس
-        const fileName = `تقرير_كورس_${course.title.replace(/\s+/g, '_')}.xlsx`;
+        XLSX.utils.book_append_sheet(workbook, worksheet, "إحصائيات الكورس الفردية");
+
+        // 8. حفظ الملف وتحميله باسم الكورس المختار
+        const cleanTitle = (course.title || 'كورس_غير_معرف').replace(/[\s\/\\?%*:|"<>]+/g, '_');
+        const fileName = `تقرير_${cleanTitle}_${new Date().toISOString().slice(0,10)}.xlsx`;
+        
         XLSX.writeFile(workbook, fileName);
     };
     const handleDeleteCourse = async (id) => {
