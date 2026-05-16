@@ -41,69 +41,62 @@ const AllContentManagement = () => {
     };
 
    const handleExportToExcel = async (course) => {
-        let lessonsData = [];
-        // تأمين معرف الكورس سواء كان id أو _id حسب بناء الباك إيند الخاص بكِ
-        const courseId = course.id || course._id;
+    let lessonsData = [];
+    const courseId = course.id || course._id;
+    
+    try {
+        // 1. طلب الهيكلية المجلدية للكورس من السيرفر (المسار الفعلي لديكِ)
+        // تأكدي من تطابق الرابط مع الـ Route المسؤول عن getCourseHierarchy في السيرفر
+        const res = await api.get(`/courses/${courseId}/hierarchy`); 
+        const hierarchyData = res.data || [];
         
-        try {
-            // 1. التحقق أولاً إذا كانت الدروس مدمجة مسبقاً وتتضمن مصفوفة صالحة
-            if (course.lessons && Array.isArray(course.lessons) && course.lessons.length > 0) {
-                lessonsData = course.lessons;
-            } else if (courseId) {
-                // 2. إذا لم تكن مدمجة، نقوم بعمل طلب مباشر وجلب الدروس الحقيقية للكورس
-                const res = await api.get(`/courses/${courseId}/lessons`);
-                // دعم التقاط المصفوفة سواء كانت راجعة مباشرة أو داخل كائن data
-                lessonsData = Array.isArray(res.data) ? res.data : (res.data?.lessons || []);
-            }
-        } catch (err) {
-            console.error("خطأ أثناء جلب تفاصيل الدروس للتصدير، سيتم الاعتماد على المصفوفة الافتراضية:", err);
-            lessonsData = [];
+        // 2. استخراج كافة الدروس من داخل المجلدات (Sections) وتحويلها إلى مصفوفة واحدة مسطحة
+        if (Array.isArray(hierarchyData)) {
+            hierarchyData.forEach(section => {
+                if (section.lessons && Array.isArray(section.lessons)) {
+                    lessonsData.push(...section.lessons);
+                }
+            });
         }
+    } catch (err) {
+        console.error("خطأ أثناء جلب تفاصيل الهيكلية للتصدير:", err);
+        lessonsData = [];
+    }
 
-        // 3. حساب عدد الفيديوهات (الأسطر المرجعية للدروس)
-        const videosCount = lessonsData.length;
+    // 3. حساب عدد الفيديوهات الإجمالي بعد تجميعها من كل المجلدات
+    const videosCount = lessonsData.length;
 
-        // 4. حساب إجمالي عدد المشاهدات الفعلي مع فحص شامل لكل مسميات الحقول المتوقعة
-        const totalViews = lessonsData.reduce((sum, lesson) => {
-            const views = lesson.views_count ?? lesson.views ?? lesson.watch_count ?? 0;
-            return sum + Number(views);
-        }, 0);
+    // 4. حساب إجمالي عدد المشاهدات الفعلي من الحقل القادم من السيرفر (views_count)
+    const totalViews = lessonsData.reduce((sum, lesson) => {
+        const views = lesson.views_count ?? lesson.views ?? lesson.watch_count ?? 0;
+        return sum + Number(views);
+    }, 0);
 
-        // 5. تحديد اسم الصف الدراسي المقابل للمُعرف
-        const gradeName = gradesList.find(g => g.id === course.grade)?.name || course.grade || 'غير محدد';
+    // 5. تحديد اسم الصف الدراسي
+    const gradeName = gradesList.find(g => g.id === course.grade)?.name || course.grade || 'غير محدد';
 
-        // 6. بناء هيكل بيانات ملف الـ Excel المخصص للمنصة
-        const excelData = [
-            {
-                "معرف الكورس (ID)": courseId || 'غير متوفر',
-                "اسم الكورس التعليمي": course.title || 'بدون عنوان',
-                "المرحلة / الصف الدراسي": gradeName,
-                "الأستاذ المحاضر": course.instructor_name || 'الأدمن / إدارة المنصة',
-                "عدد الفيديوهات والدروس": videosCount,
-                "إجمالي مشاهدات الكورس": totalViews,
-                "تاريخ استخراج التقرير": new Date().toLocaleDateString('ar-EG')
-            }
-        ];
+    // 6. بناء بيانات التصدير
+    const excelData = [
+        {
+            "معرف الكورس (ID)": courseId,
+            "اسم الكورس": course.title,
+            "الصف الدراسي": gradeName,
+            "اسم الأستاذ": course.instructor_name || 'الأدمن',
+            "عدد الفيديوهات الإجمالي": videosCount,
+            "إجمالي المشاهدات لكافة الدروس": totalViews,
+            "تاريخ استخراج التقرير": new Date().toLocaleDateString('ar-EG')
+        }
+    ];
 
-        // 7. توليد كتاب العمل والورقة باستخدام SheetJS
-        const worksheet = XLSX.utils.json_to_sheet(excelData);
-        const workbook = XLSX.utils.book_new();
-        
-        // تفعيل قراءة الملف من اليمين إلى اليسار (RTL) ليظهر بشكل احترافي باللغة العربية
-        worksheet['!dir'] = 'rtl';
+    // 7. توليد وحفظ ملف الـ Excel
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    worksheet['!dir'] = 'rtl'; // دعم اللغة العربية
 
-        // ضبط تلقائي لعرض الأعمدة لتجنب تداخل النصوص وتظهر البيانات منسقة
-        const maxKeys = Object.keys(excelData[0]);
-        worksheet['!cols'] = maxKeys.map(key => ({ wch: Math.max(key.length + 10, 20) }));
-
-        XLSX.utils.book_append_sheet(workbook, worksheet, "إحصائيات الكورس الفردية");
-
-        // 8. حفظ الملف وتحميله باسم الكورس المختار
-        const cleanTitle = (course.title || 'كورس_غير_معرف').replace(/[\s\/\\?%*:|"<>]+/g, '_');
-        const fileName = `تقرير_${cleanTitle}_${new Date().toISOString().slice(0,10)}.xlsx`;
-        
-        XLSX.writeFile(workbook, fileName);
-    };
+    XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات الكورس");
+    const fileName = `تقرير_كورس_${course.title.replace(/\s+/g, '_')}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+};
     const handleDeleteCourse = async (id) => {
         if (window.confirm("هل أنت متأكد من حذف هذا الكورس وكل محتوياته نهائياً؟")) {
             try {
