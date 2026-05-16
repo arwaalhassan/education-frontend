@@ -45,14 +45,17 @@ const CourseLessons = () => {
     }, [fetchContent]);
 
     // دالة تحديث الترتيب في السيرفر
-    const handleReorderSave = async (updatedSections) => {
-        try {
-            await api.post(`/videos/course/${courseId}/videos/reorder`, { sections: updatedSections });
-        } catch (err) {
-            console.error("فشل حفظ الترتيب الجديد:", err);
-            alert("حدث خطأ أثناء حفظ الترتيب، يرجى تحديث الصفحة.");
-        }
-    };
+   // دالة تحديث الترتيب في السيرفر بعد مطابقتها مع الـ Routes
+const handleReorderSave = async (updatedSections) => {
+    try {
+        // 1. تم تغيير api.post إلى api.put ليتطابق مع السيرفر
+        // 2. تم تعديل الرابط بحذف مقطع /videos الزائد في البداية
+        await api.put(`/videos/course/${courseId}/videos/reorder`, { sections: updatedSections });
+    } catch (err) {
+        console.error("فشل حفظ الترتيب الجديد:", err);
+        alert("حدث خطأ أثناء حفظ الترتيب، يرجى تحديث الصفحة.");
+    }
+};
 
     // منطق السحب والإفلات
     const onDragEnd = (result) => {
