@@ -140,7 +140,8 @@ const AddCourse = () => {
           <option value="تاسع">الصف التاسع</option>
           <option value="عاشر">الصف العاشر</option>
           <option value="11">الحادي عشر</option>
-          <option value="12">البكالوريا</option>
+          <option value="بكالوريا_علمي">بكالوريا علمي</option> 
+    <option value="بكالوريا_ادبي">بكالوريا أدبي</option>
         </select>
       </div>
               <div>
