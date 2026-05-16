@@ -73,51 +73,37 @@ const handleReorderSave = async (updatedSections) => {
         alert("حدث خطأ أثناء حفظ الترتيب، يرجى تحديث الصفحة.");
     }
 };
-    // منطق السحب والإفلات
+    // منطق السحب والإفلات (محصور فقط للدروس داخل نفس الوحدة)
     const onDragEnd = (result) => {
-        const { destination, source, type } = result;
+        const { destination, source } = result;
 
         if (!destination) return;
+        
+        // إذا تم الإفلات في نفس المكان تماماً
         if (destination.droppableId === source.droppableId && destination.index === source.index) return;
 
+        // التحقق من الأقسام (باستخدام تحويل النصوص لضمان المطابقة)
         const newSections = Array.from(sections);
+        const sourceSectionIndex = newSections.findIndex(s => String(`section-${s.id}`) === String(source.droppableId));
+        const destSectionIndex = newSections.findIndex(s => String(`section-${s.id}`) === String(destination.droppableId));
 
-        if (type === 'SECTION') {
-            // إعادة ترتيب الوحدات (المجلدات)
-            const [reorderedItem] = newSections.splice(source.index, 1);
-            newSections.splice(destination.index, 0, reorderedItem);
-            setSections(newSections);
-            handleReorderSave(newSections);
-        } else {
-            // إعادة ترتيب الدروس
-            const sourceSectionIndex = newSections.findIndex(s => `section-${s.id}` === source.droppableId);
-            const destSectionIndex = newSections.findIndex(s => `section-${s.id}` === destination.droppableId);
+        if (sourceSectionIndex === -1 || destSectionIndex === -1) return;
 
-            if (sourceSectionIndex === -1 || destSectionIndex === -1) return;
+        // 🛑 شرط المنع: إذا حاول المستخدم نقل الدرس إلى وحدة أخرى، نلغي العملية فوراً
+        if (sourceSectionIndex !== destSectionIndex) return;
 
-            const sourceSection = newSections[sourceSectionIndex];
-            const destSection = newSections[destSectionIndex];
+        const sourceSection = newSections[sourceSectionIndex];
+        const sourceLessons = Array.from(sourceSection.lessons || []);
+        
+        // إعادة الترتيب داخل نفس الوحدة فقط
+        const [movedLesson] = sourceLessons.splice(source.index, 1);
+        sourceLessons.splice(destination.index, 0, movedLesson);
+        
+        newSections[sourceSectionIndex] = { ...sourceSection, lessons: sourceLessons };
 
-            const sourceLessons = Array.from(sourceSection.lessons || []);
-            const [movedLesson] = sourceLessons.splice(source.index, 1);
-
-            if (sourceSectionIndex === destSectionIndex) {
-                // ترتيب داخل نفس الوحدة
-                sourceLessons.splice(destination.index, 0, movedLesson);
-                newSections[sourceSectionIndex] = { ...sourceSection, lessons: sourceLessons };
-            } else {
-                // نقل من وحدة إلى وحدة أخرى
-                const destLessons = Array.from(destSection.lessons || []);
-                destLessons.splice(destination.index, 0, movedLesson);
-                newSections[sourceSectionIndex] = { ...sourceSection, lessons: sourceLessons };
-                newSections[destSectionIndex] = { ...destSection, lessons: destLessons };
-            }
-
-            setSections(newSections);
-            handleReorderSave(newSections);
-        }
+        setSections(newSections);
+        handleReorderSave(newSections);
     };
-
     const handleAddSection = async () => {
         if (!newSectionTitle.trim()) return;
         try {
