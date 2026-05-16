@@ -5,6 +5,7 @@ import * as XLSX from 'xlsx';
 const CouponManager = () => {
     const [courses, setCourses] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [reportLoading, setReportLoading] = useState(false);
     const [generatedCodes, setGeneratedCodes] = useState([]);
     
     const [formData, setFormData] = useState({
@@ -71,11 +72,53 @@ const CouponManager = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "كوبونات الخصم");
     XLSX.writeFile(workbook, `Coupons_${formData.courseId || 'General'}_${Date.now()}.xlsx`);
 };
+    const exportCouponsReport = async () => {
+        setReportLoading(true);
+        try {
+            // استدعاء الراوت الجديد من السيرفر للتقرير
+            const res = await api.get('/admin/coupons/report');
+            const reportData = res.data;
+
+            if (!reportData || reportData.length === 0) {
+                alert("لا توجد بيانات كوبونات تم إنشاؤها خلال الـ 30 يوماً الماضية.");
+                return;
+            }
+
+            // إعادة صياغة المفاتيح لتظهر باللغة العربية داخل ملف الإكسل
+            const dataToExport = reportData.map((item, index) => ({
+                "رقم السجل": index + 1,
+                "معرف الكورس (ID)": item.course_id,
+                "اسم الكورس المستهدف": item.course_title || "غير معروف",
+                "إجمالي الكوبونات المولدة (آخر 30 يوم)": item.total_coupons
+            }));
+
+            // إنشاء ملف الـ Excel وتنزيله للعميل
+            const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "تقرير الكوبونات الشهري");
+            XLSX.writeFile(workbook, `Coupons_Monthly_Report_${Date.now()}.xlsx`);
+
+        } catch (err) {
+            console.error("خطأ أثناء تصدير التقرير المالي للكوبونات:", err);
+            alert(err.response?.data?.message || "حدث خطأ أثناء جلب وتصدير التقرير");
+        } finally {
+            setReportLoading(false);
+        }
+    };
     return (
         <div style={styles.container}>
             <h1 style={styles.title}>🎫 إدارة كوبونات الخصم</h1>
             <p style={styles.subtitle}>يمكنك توليد أكواد اشتراك مجانية وتحديد مدة صلاحيتها</p>
-
+{/* زر تصدير التقرير العام المستحدث في أعلى الصفحة بشكل مستقل وأنيق */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '15px' }}>
+                <button 
+                    onClick={exportCouponsReport} 
+                    disabled={reportLoading}
+                    style={styles.globalReportButton}
+                >
+                    {reportLoading ? "جاري إعداد التقرير..." : "📊 تصدير إحصائيات الكوبونات (آخر 30 يوم)"}
+                </button>
+            </div>
             <div style={styles.card}>
                 <div style={styles.inputGroup}>
                     <label>اختر الكورس المستهدف:</label>
