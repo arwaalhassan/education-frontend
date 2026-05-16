@@ -47,7 +47,7 @@ const CourseLessons = () => {
     // دالة تحديث الترتيب في السيرفر
     const handleReorderSave = async (updatedSections) => {
         try {
-            await api.post(`/courses/${courseId}/reorder`, { sections: updatedSections });
+            await api.post(`/videos/course/${courseId}/videos/reorder`, { sections: updatedSections });
         } catch (err) {
             console.error("فشل حفظ الترتيب الجديد:", err);
             alert("حدث خطأ أثناء حفظ الترتيب، يرجى تحديث الصفحة.");
