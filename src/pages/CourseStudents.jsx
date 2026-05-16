@@ -11,7 +11,9 @@ import {
     Clock, 
     X,
     PlayCircle,
-    AlertCircle
+    AlertCircle,
+    Ticket,     // تم إضافة أيقونة الكوبون
+    ShieldAlert  // تم إضافة أيقونة التسجيل اليدوي/الإداري
 } from 'lucide-react';
 
 const CourseStudents = () => {
@@ -34,53 +36,48 @@ const CourseStudents = () => {
         fetchStudents();
     }, [courseId]);
 
-   // 1. جلب قائمة الطلاب
-const fetchStudents = async () => {
-    try {
-        setLoading(true);
-        setError(null);
-        // التعديل: إزالة /admin وإضافة الترتيب الصحيح للمسار
-        // نفترض هنا أن ملف routes/student.js مربوط في server.js بمسار '/api/students'
-        const res = await api.get(`/student/course/${courseId}/students`);
-        
-        setStudents(res.data);
-    } catch (err) {
-        console.error("خطأ في جلب الطلاب:", err);
-        setError("تعذر تحميل قائمة الطلاب، تأكد من مسار السيرفر.");
-    } finally {
-        setLoading(false);
-    }
-};
-
-// 2. جلب سجلات المشاهدة
-const fetchStudentLogs = async (student) => {
-    try {
-        setActiveStudentName(student.full_name);
-        setIsLogsLoading(true);
-        setShowLogsModal(true);
-        // التعديل: المسار ليطابق router.get('/course/:courseId/student/:studentId/logs')
-        const res = await api.get(`/student/course/${courseId}/student/${student.id}/logs`);
-        setSelectedStudentLogs(res.data);
-    } catch (err) {
-        console.error("خطأ في السجلات:", err);
-        setSelectedStudentLogs([]);
-    } finally {
-        setIsLogsLoading(false);
-    }
-};
-
-// 3. إلغاء الاشتراك
-const handleUnenroll = async (userId) => {
-    if (window.confirm("هل أنت متأكد؟")) {
+    // 1. جلب قائمة الطلاب
+    const fetchStudents = async () => {
         try {
-            // التعديل: المسار ليطابق router.post('/unenroll-student')
-            await api.post('/student/unenroll-student', { userId, courseId });
-            setStudents(students.filter(s => s.id !== userId));
+            setLoading(true);
+            setError(null);
+            const res = await api.get(`/student/course/${courseId}/students`);
+            setStudents(res.data);
         } catch (err) {
-            alert("حدث خطأ أثناء إلغاء الاشتراك");
+            console.error("خطأ في جلب الطلاب:", err);
+            setError("تعذر تحميل قائمة الطلاب، تأكد من مسار السيرفر.");
+        } finally {
+            setLoading(false);
         }
-    }
-};
+    };
+
+    // 2. جلب سجلات المشاهدة
+    const fetchStudentLogs = async (student) => {
+        try {
+            setActiveStudentName(student.full_name);
+            setIsLogsLoading(true);
+            setShowLogsModal(true);
+            const res = await api.get(`/student/course/${courseId}/student/${student.id}/logs`);
+            setSelectedStudentLogs(res.data);
+        } catch (err) {
+            console.error("خطأ في السجلات:", err);
+            setSelectedStudentLogs([]);
+        } finally {
+            setIsLogsLoading(false);
+        }
+    };
+
+    // 3. إلغاء الاشتراك
+    const handleUnenroll = async (userId) => {
+        if (window.confirm("هل أنت متأكد؟")) {
+            try {
+                await api.post('/student/unenroll-student', { userId, courseId });
+                setStudents(students.filter(s => s.id !== userId));
+            } catch (err) {
+                alert("حدث خطأ أثناء إلغاء الاشتراك");
+            }
+        }
+    };
 
     const filteredStudents = students.filter(s => 
         (s.full_name?.toLowerCase().includes(searchTerm.toLowerCase())) ||
@@ -115,7 +112,7 @@ const handleUnenroll = async (userId) => {
                         </h1>
                     </div>
                     
-                    {/* Stat Card - السمة الجديدة المضافة بناءً على طلبك السابق لعرض نشاط الطلاب */}
+                    {/* Stat Card */}
                     <div className="bg-white px-6 py-3 rounded-2xl shadow-sm border border-blue-100 flex items-center gap-4">
                         <div className="text-left">
                             <p className="text-xs text-slate-400 font-bold uppercase tracking-wider">إجمالي المسجلين</p>
@@ -159,6 +156,7 @@ const handleUnenroll = async (userId) => {
                                         <tr>
                                             <th className="p-5 font-bold text-slate-600">اسم الطالب</th>
                                             <th className="p-5 font-bold text-slate-600">رقم الهاتف</th>
+                                            <th className="p-5 font-bold text-slate-600 text-center">نوع الاشتراك</th> {/* التعديل 1: رأس العمود الجديد */}
                                             <th className="p-5 font-bold text-slate-600 text-center">تاريخ الانضمام</th>
                                             <th className="p-5 font-bold text-slate-600 text-center">الإجراءات</th>
                                         </tr>
@@ -173,6 +171,22 @@ const handleUnenroll = async (userId) => {
                                                 <td className="p-5 text-slate-600 font-mono tracking-tighter text-lg" dir="ltr">
                                                     {student.phone}
                                                 </td>
+                                                
+                                                {/* التعديل 2: خلية عرض نوع الاشتراك عبر شارات ملونة */}
+                                                <td className="p-5 text-center">
+                                                    {student.payment_type === 'coupon' ? (
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                                            <Ticket size={14} />
+                                                            كوبون تفعيل
+                                                        </span>
+                                                    ) : (
+                                                        <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                                                            <ShieldAlert size={14} />
+                                                            تسجيل إداري
+                                                        </span>
+                                                    )}
+                                                </td>
+
                                                 <td className="p-5 text-center text-slate-500 font-medium">
                                                     {new Date(student.enrolled_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
                                                 </td>
