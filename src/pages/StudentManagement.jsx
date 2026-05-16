@@ -3,6 +3,7 @@ import api from "../services/api";
 
 const StudentManagement = () => {
     const [requests, setRequests] = useState([]); // تخزين طلبات الاشتراك المعلقة
+    const [selectedCourse, setSelectedCourse] = useState('');
     const [loading, setLoading] = useState(true);
 
     // جلب الطلبات المعلقة
@@ -68,13 +69,39 @@ const StudentManagement = () => {
             alert(error.response?.data?.message || "حدث خطأ أثناء معالجة الطلب");
         }
     };
+// 1. استخراج قائمة الكورسات الفريدة (Unique Courses) من الطلبات لتعبئة قائمة الفلترة ديناميكياً
+    const uniqueCourses = [...new Set(requests.map(req => req.course_title))].filter(Boolean);
 
+    // 2. فلترة الطلبات بناءً على الكورس المختار
+    const filteredRequests = selectedCourse
+        ? requests.filter(req => req.course_title === selectedCourse)
+        : requests;
     if (loading) return <div className="p-10 text-center">جاري تحميل الطلبات المعلقة...</div>;
 
     return (
         <div className="p-6" dir="rtl">
             <h2 className="text-2xl font-bold mb-6 text-gray-800">إدارة طلبات الاشتراك المعلقة</h2>
-            
+            {/* قسم الفلترة المستحدث */}
+                <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm w-full md:w-auto">
+                    <label htmlFor="courseFilter" className="text-sm font-semibold text-gray-600 whitespace-nowrap">تصفية حسب الكورس:</label>
+                    <select
+                        id="courseFilter"
+                        value={selectedCourse}
+                        onChange={(e) => setSelectedCourse(e.target.value)}
+                        className="bg-gray-50 border border-gray-300 text-gray-700 text-sm rounded-lg focus:outline-none focus:border-blue-500 block p-1.5 font-medium min-w-[200px]"
+                    >
+                        <option value="">كل الكورسات ({requests.length})</option>
+                        {uniqueCourses.map((courseTitle, index) => {
+                            const count = requests.filter(r => r.course_title === courseTitle).length;
+                            return (
+                                <option key={index} value={courseTitle}>
+                                    {courseTitle} ({count})
+                                </option>
+                            );
+                        })}
+                    </select>
+                </div>
+            </div>
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <table className="w-full text-right">
                     <thead className="bg-gray-50 border-b">
@@ -99,11 +126,12 @@ const StudentManagement = () => {
                                             type="number" 
                                             value={req.editableAmount} 
                                             onChange={(e) => handleAmountChange(req.id, e.target.value)}
-                                            className="w-24 px-2 py-1 text-center font-bold text-green-600 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 bg-gray-50 hover:bg-white"
+                                            placeholder="أدخل السعر"
+                                            className="w-28 px-2 py-1.5 text-center font-bold text-green-600 border border-gray-300 rounded-lg focus:outline-none focus:border-green-500 bg-gray-50 hover:bg-white placeholder:text-gray-400 placeholder:text-xs placeholder:font-normal"
                                             step="0.01"
                                             min="0"
                                         />
-                                        <span className="text-gray-500 text-sm font-semibold">JOD</span>
+                                        <span className="text-gray-500 text-sm font-semibold">SP</span>
                                     </div>
                                 </td>
 
