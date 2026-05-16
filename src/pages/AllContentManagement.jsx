@@ -40,7 +40,7 @@ const AllContentManagement = () => {
         }
     };
 
-    const handleExportToExcel = async (course) => {
+   const handleExportToExcel = async (course) => {
         let lessonsData = [];
         
         // التحقق أولاً إذا كانت الدروس مدمجة في الكورس، وإلا نقوم بعمل طلب سريع للباك إيند لجلبها
@@ -48,8 +48,7 @@ const AllContentManagement = () => {
             lessonsData = course.lessons;
         } else {
             try {
-                // نقوم بطلب الدروس التابعة لهذا الكورس مباشرة لضمان الحصول على البيانات
-                // 💡 ملاحظة: يمكنك تعديل الرابط أدناه ليتطابق تماماً مع مسار جلب دروس الكورس في الباك إيند لديك
+                // طلب الدروس التابعة لهذا الكورس مباشرة لضمان الحصول على البيانات
                 const res = await api.get(`/courses/${course.id}/lessons`);
                 lessonsData = res.data || [];
             } catch (err) {
@@ -244,7 +243,7 @@ const AllContentManagement = () => {
 
                                     {/* زر التصدير */}
                                     <button 
-                                        onClick={() => handleExport(course)}
+                                        onClick={() => handleExportToExcel(course)}
                                         className="p-2.5 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-600 hover:text-white transition-all border border-orange-100"
                                         title="تصدير بيانات الكورس"
                                     >
