@@ -46,17 +46,33 @@ const CourseLessons = () => {
 
     // دالة تحديث الترتيب في السيرفر
    // دالة تحديث الترتيب في السيرفر بعد مطابقتها مع الـ Routes
+// دالة تحديث الترتيب في السيرفر بعد مطابقتها مع متطلبات الـ Controller
 const handleReorderSave = async (updatedSections) => {
     try {
-        // 1. تم تغيير api.post إلى api.put ليتطابق مع السيرفر
-        // 2. تم تعديل الرابط بحذف مقطع /videos الزائد في البداية
-        await api.put(`/videos/course/${courseId}/videos/reorder`, { sections: updatedSections });
+        const flatVideosList = [];
+        let globalOrder = 0;
+
+        // المرور على الوحدات المستلمة بعد الترتيب
+        updatedSections.forEach((section) => {
+            if (section.lessons && Array.isArray(section.lessons)) {
+                section.lessons.forEach((lesson) => {
+                    flatVideosList.push({
+                        id: lesson.id,
+                        sort_order: globalOrder // تعيين ترتيب تصاعدي مستمر
+                    });
+                    globalOrder++;
+                });
+            }
+        });
+
+        // إرسال البيانات بالاسم والهيكل الذي ينتظره السيرفر تماماً (videos) عبر طلب PUT
+        await api.put(`/videos/course/${courseId}/videos/reorder`, { videos: flatVideosList });
+        
     } catch (err) {
         console.error("فشل حفظ الترتيب الجديد:", err);
         alert("حدث خطأ أثناء حفظ الترتيب، يرجى تحديث الصفحة.");
     }
 };
-
     // منطق السحب والإفلات
     const onDragEnd = (result) => {
         const { destination, source, type } = result;
