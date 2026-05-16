@@ -12,10 +12,10 @@ const StudentManagement = () => {
             setLoading(true);
             const res = await api.get('/admin/payments/pending');
             
-            // 🔥 ضبط وتجهيز البيانات: ننسخ السعر الأصلي ليكون القيمة الافتراضية داخل حقل الإدخال
+            // ضبط وتجهيز البيانات: ننسخ السعر الأصلي ليكون القيمة الافتراضية داخل حقل الإدخال
             const preparedData = res.data.map(req => ({
                 ...req,
-                editableAmount: req.amount !== undefined ? req.amount : ''
+                editableAmount: req.amount !== undefined && req.amount !== 0 ? req.amount : ''
             }));
             
             setRequests(preparedData);
@@ -47,7 +47,7 @@ const StudentManagement = () => {
             : (reqObject.amount || 0);
 
         const confirmMsg = action === 'completed' 
-            ? `هل أنت متأكد من الموافقة وتفعيل الكورس بمبلغ (${finalAmount} JOD)؟` 
+            ? `هل أنت متأكد من الموافقة وتفعيل الكورس بمبلغ (${finalAmount} SP)؟` 
             : "هل أنت متأكد من رفض هذا الطلب؟";
             
         if (!window.confirm(confirmMsg)) return;
@@ -69,19 +69,25 @@ const StudentManagement = () => {
             alert(error.response?.data?.message || "حدث خطأ أثناء معالجة الطلب");
         }
     };
-// 1. استخراج قائمة الكورسات الفريدة (Unique Courses) من الطلبات لتعبئة قائمة الفلترة ديناميكياً
+
+    // 1. استخراج قائمة الكورسات الفريدة (Unique Courses) من الطلبات لتعبئة قائمة الفلترة ديناميكياً
     const uniqueCourses = [...new Set(requests.map(req => req.course_title))].filter(Boolean);
 
     // 2. فلترة الطلبات بناءً على الكورس المختار
     const filteredRequests = selectedCourse
         ? requests.filter(req => req.course_title === selectedCourse)
         : requests;
-    if (loading) return <div className="p-10 text-center">جاري تحميل الطلبات المعلقة...</div>;
+
+    if (loading) return <div className="p-10 text-center font-medium text-gray-600">جاري تحميل الطلبات المعلقة...</div>;
 
     return (
         <div className="p-6" dir="rtl">
-            <h2 className="text-2xl font-bold mb-6 text-gray-800">إدارة طلبات الاشتراك المعلقة</h2>
-            {/* قسم الفلترة المستحدث */}
+            
+            {/* الهيدر العلوي المتجاوب ويحتوي على الفلترة على اليسار */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <h2 className="text-2xl font-bold text-gray-800">إدارة طلبات الاشتراك المعلقة</h2>
+                
+                {/* قسم الفلترة المنسق */}
                 <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-xl border border-gray-200 shadow-sm w-full md:w-auto">
                     <label htmlFor="courseFilter" className="text-sm font-semibold text-gray-600 whitespace-nowrap">تصفية حسب الكورس:</label>
                     <select
@@ -102,24 +108,25 @@ const StudentManagement = () => {
                     </select>
                 </div>
             </div>
+            
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 <table className="w-full text-right">
                     <thead className="bg-gray-50 border-b">
                         <tr>
-                            <th className="p-4 font-semibold">اسم الطالب</th>
-                            <th className="p-4 font-semibold">الكورس المطلوب</th>
-                            <th className="p-4 font-semibold w-44">المبلغ المدفوع (قابل للتعديل)</th>
-                            <th className="p-4 font-semibold">وسيلة الدفع</th>
-                            <th className="p-4 text-center font-semibold">الإجراءات</th>
+                            <th className="p-4 font-semibold text-gray-700">اسم الطالب</th>
+                            <th className="p-4 font-semibold text-gray-700">الكورس المطلوب</th>
+                            <th className="p-4 font-semibold text-gray-700 w-52">المبلغ المدفوع (قابل للتعديل)</th>
+                            <th className="p-4 font-semibold text-gray-700">وسيلة الدفع</th>
+                            <th className="p-4 text-center font-semibold text-gray-700">الإجراءات</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        {requests.length > 0 ? requests.map(req => (
-                            <tr key={req.id} className="border-b last:border-0 hover:bg-gray-50 transition">
-                                <td className="p-4 font-medium">{req.full_name}</td>
-                                <td className="p-4">{req.course_title}</td>
+                    <tbody className="divide-y divide-gray-100">
+                        {/* 🔥 التعديل الأساسي هنا: الرندرة تعتمد على المصفوفة المفلترة filteredRequests */}
+                        {filteredRequests.length > 0 ? filteredRequests.map(req => (
+                            <tr key={req.id} className="hover:bg-gray-50 transition">
+                                <td className="p-4 font-medium text-gray-900">{req.full_name}</td>
+                                <td className="p-4 text-gray-700">{req.course_title}</td>
                                 
-                                {/* حقل إدخال رقمي مرن لتغيير المبلغ المالي */}
                                 <td className="p-4">
                                     <div className="flex items-center gap-2">
                                         <input 
@@ -136,21 +143,20 @@ const StudentManagement = () => {
                                 </td>
 
                                 <td className="p-4">
-                                    <span className="bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm font-medium">
+                                    <span className="bg-blue-100 text-blue-700 px-2.5 py-1 rounded-md text-xs font-semibold">
                                         {req.payment_method}
                                     </span>
                                 </td>
                                 <td className="p-4 flex justify-center gap-2">
-                                    {/* 🔥 تم الإصلاح هنا: نقوم بتمرير كائن الـ req بالكامل بدلاً من req.id فقط */}
                                     <button 
                                         onClick={() => handleAction(req, 'completed')}
-                                        className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition font-medium"
+                                        className="bg-green-600 text-white px-4 py-1.5 rounded-lg hover:bg-green-700 transition font-medium text-sm shadow-sm"
                                     >
                                         موافقة
                                     </button>
                                     <button 
                                         onClick={() => handleAction(req, 'failed')}
-                                        className="bg-red-100 text-red-600 px-4 py-1.5 rounded-lg hover:bg-red-200 transition font-medium"
+                                        className="bg-red-50 text-red-600 px-4 py-1.5 rounded-lg hover:bg-red-100 transition font-medium text-sm"
                                     >
                                         رفض
                                     </button>
@@ -158,7 +164,9 @@ const StudentManagement = () => {
                             </tr>
                         )) : (
                             <tr>
-                                <td colSpan="5" className="p-10 text-center text-gray-500">لا توجد طلبات اشتراك معلقة حالياً</td>
+                                <td colSpan="5" className="p-10 text-center text-gray-500 font-medium">
+                                    {selectedCourse ? "لا توجد طلبات معلقة لهذا الكورس حالياً" : "لا توجد طلبات اشتراك معلقة حالياً"}
+                                </td>
                             </tr>
                         )}
                     </tbody>
