@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import api from '../services/api';
 import { BookOpen, Pencil, Trash2, FileText, Plus, Search, Loader2, GraduationCap, Users, Download, LayoutGrid } from 'lucide-react'; 
 import { useNavigate } from 'react-router-dom';
+import * as XLSX from 'xlsx';
 
 const AllContentManagement = () => {
     const [courses, setCourses] = useState([]);
@@ -39,43 +40,59 @@ const AllContentManagement = () => {
         }
     };
 
-    const handleExport = (course) => {
+    const handleExportToExcel = async (course) => {
+        let lessonsData = [];
+        
+        // التحقق أولاً إذا كانت الدروس مدمجة في الكورس، وإلا نقوم بعمل طلب سريع للباك إيند لجلبها
+        if (course.lessons && Array.isArray(course.lessons)) {
+            lessonsData = course.lessons;
+        } else {
+            try {
+                // نقوم بطلب الدروس التابعة لهذا الكورس مباشرة لضمان الحصول على البيانات
+                // 💡 ملاحظة: يمكنك تعديل الرابط أدناه ليتطابق تماماً مع مسار جلب دروس الكورس في الباك إيند لديك
+                const res = await api.get(`/courses/${course.id}/lessons`);
+                lessonsData = res.data || [];
+            } catch (err) {
+                console.error("لم يتم العثور على دروس مدمجة، سيتم التصدير بالقيم الافتراضية:", err);
+                lessonsData = [];
+            }
+        }
+
         // 1. حساب عدد الفيديوهات (الدروس)
-        const videosCount = course.lessons ? course.lessons.length : 0;
+        const videosCount = lessonsData.length;
 
-        // 2. حساب إجمالي عدد المشاهدات بجمع مشاهدات كل فيديو
-        const totalViews = course.lessons 
-            ? course.lessons.reduce((sum, lesson) => sum + (lesson.views_count || lesson.views || 0), 0)
-            : 0;
+        // 2. حساب إجمالي عدد المشاهدات بناءً على بنية الحقول القادمة من الباك إيند
+        const totalViews = lessonsData.reduce((sum, lesson) => {
+            return sum + (lesson.views_count || lesson.views || lesson.watch_count || 0);
+        }, 0);
 
-        // 3. جلب اسم الصف الدراسي المقابل للـ id
+        // 3. تحديد اسم الصف الدراسي المقابل للـ ID
         const gradeName = gradesList.find(g => g.id === course.grade)?.name || course.grade || 'غير محدد';
 
-        // 4. تجهيز محتوى الـ CSV مع إضافة الـ BOM لضمان عدم ظهور اللغة العربية كرموز غريبة في Excel
-        const csvRows = [
-            ["ID", "اسم الكورس", "الصف الدراسي", "اسم الأستاذ", "عدد الفيديوهات", "إجمالي المشاهدات"], // العناوين
-            [
-                course.id, 
-                `"${course.title.replace(/"/g, '""')}"`, // حماية النصوص من الفواصل داخل الاسم
-                `"${gradeName}"`, 
-                `"${course.instructor_name || 'الأدمن'}"`, 
-                videosCount, 
-                totalViews
-            ]
+        // 4. بناء هيكل البيانات المخصصة لملف الـ Excel
+        const excelData = [
+            {
+                "ID الكورس": course.id,
+                "اسم الكورس": course.title,
+                "الصف الدراسي": gradeName,
+                "اسم الأستاذ": course.instructor_name || 'الأدمن',
+                "عدد الفيديوهات": videosCount,
+                "إجمالي المشاهدات": totalViews
+            }
         ];
 
-        // تحويل المصفوفة إلى نص CSV يفصل بينه فواصل
-        const csvContent = "\uFEFF" + csvRows.map(e => e.join(",")).join("\n");
+        // 5. إنشاء كتاب عمل (Workbook) وورقة عمل (Worksheet) باستخدام SheetJS
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
         
-        // 5. عملية التحميل
-        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.setAttribute("href", url);
-        link.setAttribute("download", `تقرير_كورس_${course.title.replace(/\s+/g, '_')}.csv`);
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link); 
+        // دعم اتجاه الشاشة من اليمين إلى اليسار داخل ملف الإكسل ليظهر بشكل متناسق مع اللغة العربية
+        worksheet['!dir'] = 'rtl';
+
+        XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات الكورس");
+
+        // 6. توليد وحفظ ملف الـ Excel باسم الكورس
+        const fileName = `تقرير_كورس_${course.title.replace(/\s+/g, '_')}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
     };
     const handleDeleteCourse = async (id) => {
         if (window.confirm("هل أنت متأكد من حذف هذا الكورس وكل محتوياته نهائياً؟")) {
