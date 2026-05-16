@@ -40,19 +40,43 @@ const AllContentManagement = () => {
     };
 
     const handleExport = (course) => {
-        const csvContent = "data:text/csv;charset=utf-8," 
-            + "ID,Title,Instructor\n"
-            + `${course.id},${course.title},${course.instructor_name || 'Admin'}`;
+        // 1. حساب عدد الفيديوهات (الدروس)
+        const videosCount = course.lessons ? course.lessons.length : 0;
+
+        // 2. حساب إجمالي عدد المشاهدات بجمع مشاهدات كل فيديو
+        const totalViews = course.lessons 
+            ? course.lessons.reduce((sum, lesson) => sum + (lesson.views_count || lesson.views || 0), 0)
+            : 0;
+
+        // 3. جلب اسم الصف الدراسي المقابل للـ id
+        const gradeName = gradesList.find(g => g.id === course.grade)?.name || course.grade || 'غير محدد';
+
+        // 4. تجهيز محتوى الـ CSV مع إضافة الـ BOM لضمان عدم ظهور اللغة العربية كرموز غريبة في Excel
+        const csvRows = [
+            ["ID", "اسم الكورس", "الصف الدراسي", "اسم الأستاذ", "عدد الفيديوهات", "إجمالي المشاهدات"], // العناوين
+            [
+                course.id, 
+                `"${course.title.replace(/"/g, '""')}"`, // حماية النصوص من الفواصل داخل الاسم
+                `"${gradeName}"`, 
+                `"${course.instructor_name || 'الأدمن'}"`, 
+                videosCount, 
+                totalViews
+            ]
+        ];
+
+        // تحويل المصفوفة إلى نص CSV يفصل بينه فواصل
+        const csvContent = "\uFEFF" + csvRows.map(e => e.join(",")).join("\n");
         
-        const encodedUri = encodeURI(csvContent);
+        // 5. عملية التحميل
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
         const link = document.createElement("a");
-        link.setAttribute("href", encodedUri);
-        link.setAttribute("download", `course_${course.id}_info.csv`);
+        link.setAttribute("href", url);
+        link.setAttribute("download", `تقرير_كورس_${course.title.replace(/\s+/g, '_')}.csv`);
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link); 
     };
-
     const handleDeleteCourse = async (id) => {
         if (window.confirm("هل أنت متأكد من حذف هذا الكورس وكل محتوياته نهائياً؟")) {
             try {
