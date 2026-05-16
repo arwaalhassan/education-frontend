@@ -13,7 +13,8 @@ import {
     FolderPlus,
     Plus,      
     ChevronDown,
-    GripVertical
+    GripVertical,
+    Eye
 } from 'lucide-react';
 import AddInteractiveQuestions from '../components/AddInteractiveQuestions';
 import VideoUploader from '../components/VideoUploader';
@@ -96,7 +97,6 @@ const CourseLessons = () => {
             handleReorderSave(newSections);
         }
     };
-
     const handleAddSection = async () => {
         if (!newSectionTitle) return;
         try {
@@ -245,6 +245,14 @@ const CourseLessons = () => {
                                                                                     </div>
                                                                                     <div>
                                                                                         <h4 className="font-bold text-slate-700">{lesson.title}</h4>
+                                                                                        {/* 🟢 شارة عرض المشاهدات - تظهر فقط إذا كان الدرس فيديو */}
+                                                                                            {lesson.content_type === 'video' && (
+                                                                                                <div className="flex items-center gap-1 bg-slate-100 text-slate-500 px-2 py-0.5 rounded-md text-xs font-medium">
+                                                                                                    <Eye size={12} />
+                                                                                                    <span>{lesson.views_count || lesson.views || 0} مشاهدة</span>
+                                                                                                </div>
+                                                                                            )}
+                                                                                        </div>
                                                                                         <span className="text-[10px] text-slate-400 uppercase tracking-wider">{lesson.content_type}</span>
                                                                                     </div>
                                                                                 </div>
