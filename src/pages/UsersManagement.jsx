@@ -51,33 +51,39 @@ const UsersControl = () => {
     };
 
     // [2] إرسال الكود عبر الواتساب
-    const sendWhatsApp = (phone, code) => {
-    if (!phone) return alert("لا يوجد رقم هاتف لهذا المستخدم");
+   const sendWhatsApp = (phone, code) => {
+        if (!phone) return alert("لا يوجد رقم هاتف لهذا المستخدم");
 
-    // 1. تنظيف الرقم من أي رموز غير رقمية (مثل المسافات أو الـ +)
-    let cleanPhone = phone.replace(/\D/g, '');
+        // 1. تنظيف الرقم من المسافات، والشرطات، ورموز البلس
+        let cleanPhone = phone.toString().replace(/[\s\+\-\(\)]/g, '');
 
-    // 2. معالجة الأرقام السورية المحلية (إذا بدأ بـ 09، نحذف الـ 0 ونضيف 963)
-    if (cleanPhone.startsWith('09')) {
-        cleanPhone = '963' + cleanPhone.substring(1);
-    } 
-    // 3. إذا كان الرقم يبدأ بـ 9630 (خطأ شائع)، نصححه لـ 963
-    else if (cleanPhone.startsWith('9630')) {
-        cleanPhone = '963' + cleanPhone.substring(4);
-    }
+        // 2. معالجة الأرقام السورية المحلية التي تبدأ بـ 09
+        if (cleanPhone.startsWith('09') && cleanPhone.length === 10) {
+            cleanPhone = '963' + cleanPhone.substring(1);
+        } 
+        // 3. معالجة الأرقام التي تبدأ بـ 9 أو 00963
+        else if (cleanPhone.startsWith('00963')) {
+            cleanPhone = cleanPhone.substring(2);
+        }
+        else if (cleanPhone.startsWith('9') && cleanPhone.length === 9) {
+            cleanPhone = '963' + cleanPhone;
+        }
+        // 4. معالجة الأخطاء الشائعة مثل 96309
+        else if (cleanPhone.startsWith('96309')) {
+            cleanPhone = '963' + cleanPhone.substring(4);
+        }
 
-    const message = `أهلاً بك في منصة التعليم. كود تفعيل حسابك هو: ${code}`;
-    
-    // 4. استخدام رابط API الرسمي (أكثر توافقية مع المتصفحات)
-    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
-    
-    // 5. فتح الرابط مع إعدادات تمنع حجب النافذة المنبثقة
-    const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-    
-    if (!newWindow) {
-        alert("يرجى السماح بالنوافذ المنبثقة (Pop-ups) لهذا الموقع لفتح واتساب.");
-    }
-};
+        const message = `مرحباً بك في منصتنا التعليمية 🎓\n\nكود تفعيل حسابك الخاص بك هو: *${code}*\n\nيرجى إدخال هذا الكود في التطبيق لتفعيل الحساب.`;
+        
+        // استخدام رابط واجهة ويب واتساب الرسمية المتوافقة مع الهواتف والمتصفحات
+        const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
+        
+        const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
+        
+        if (!newWindow) {
+            alert("يرجى السماح بالنوافذ المنبثقة (Pop-ups) لتتمكن من فتح الواتساب يدوياً.");
+        }
+    };
 
     // [3] حذف المستخدم
     const handleDeleteUser = async (id, full_name) => {
