@@ -31,7 +31,7 @@ const UsersControl = () => {
             setUsers(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error("خطأ في جلب البيانات");
-        } finaly {
+        } finally {
             setLoading(false);
         }
     };
