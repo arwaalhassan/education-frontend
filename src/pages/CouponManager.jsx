@@ -76,7 +76,7 @@ const CouponManager = () => {
         setReportLoading(true);
         try {
             // استدعاء الراوت الجديد من السيرفر للتقرير
-            const res = await api.get('/coupons/report');
+            const res = await api.get('/general/coupons/report');
             const reportData = res.data;
 
             if (!reportData || reportData.length === 0) {
