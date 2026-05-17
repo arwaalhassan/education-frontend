@@ -105,8 +105,8 @@ function App() {
             <Route path="/admin/results" element={<AdminOrTeacherRoute><StudentResults /></AdminOrTeacherRoute>} />
 
             {/* --- 3. مسارات الآدمن حصراً (إدارة النظام والأرباح) --- */}
-            <Route path="/admin/students" element={<AdminRoute><StudentManagement /></AdminRoute>} />
-            <Route path="/admin/users" element={<AdminOrTeacherRoute><UsersManagement /></AdminOrTeacherRoute>} />
+            <Route path="/admin/students" element={<AdminOrTeacherRoute><StudentManagement /></AdminOrTeacherRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><UsersManagement /></AdminRoute>} />
             <Route path="/admin/announcements" element={<AdminRoute><AnnouncementsManager /></AdminRoute>} />
             <Route path="/admin/all-content" element={<AdminRoute><AllContentManagement /></AdminRoute>} />
             <Route path="/reports" element={<AdminRoute><Reports /></AdminRoute>} />
