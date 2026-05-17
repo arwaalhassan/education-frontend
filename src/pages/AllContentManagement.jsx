@@ -8,11 +8,13 @@ const AllContentManagement = () => {
     const [courses, setCourses] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
-    // 🟢 إضافة State للتحكم في التبويب النشط (الصف الدراسي الحالي)
     const [activeTab, setActiveTab] = useState('all'); 
     const navigate = useNavigate();
 
-    // قائمة الصفوف المطابقة تماماً للمنصة (الفلاتر والباك إيند)
+    // 🟢 قراءة بيانات المستخدم الحالي لتحديد الصلاحيات
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = user && user.role === 'admin';
+
     const gradesList = [
         { id: 'all', name: 'كل الكورسات' },
         { id: 'ثامن', name: 'الصف الثامن' },
@@ -31,7 +33,7 @@ const AllContentManagement = () => {
         try {
             setLoading(true);
             const res = await api.get('/courses'); 
-            setCourses(res.data);
+            setCourses(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error("خطأ في جلب البيانات:", err);
             setCourses([]);
@@ -40,64 +42,63 @@ const AllContentManagement = () => {
         }
     };
 
-   const handleExportToExcel = async (course) => {
-    let lessonsData = [];
-    const courseId = course.id || course._id;
-    
-    try {
-        // 1. طلب الهيكلية المجلدية للكورس من السيرفر (المسار الفعلي لديكِ)
-        // تأكدي من تطابق الرابط مع الـ Route المسؤول عن getCourseHierarchy في السيرفر
-        const res = await api.get(`/courses/${courseId}/hierarchy`); 
-        const hierarchyData = res.data || [];
+    const handleExportToExcel = async (course) => {
+        let lessonsData = [];
+        const courseId = course.id || course._id;
         
-        // 2. استخراج كافة الدروس من داخل المجلدات (Sections) وتحويلها إلى مصفوفة واحدة مسطحة
-        if (Array.isArray(hierarchyData)) {
-            hierarchyData.forEach(section => {
-                if (section.lessons && Array.isArray(section.lessons)) {
-                    lessonsData.push(...section.lessons);
-                }
-            });
+        try {
+            const res = await api.get(`/courses/${courseId}/hierarchy`); 
+            const hierarchyData = res.data || [];
+            
+            if (Array.isArray(hierarchyData)) {
+                hierarchyData.forEach(section => {
+                    if (section.lessons && Array.isArray(section.lessons)) {
+                        lessonsData.push(...section.lessons);
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("خطأ أثناء جلب تفاصيل الهيكلية للتصدير:", err);
+            lessonsData = [];
         }
-    } catch (err) {
-        console.error("خطأ أثناء جلب تفاصيل الهيكلية للتصدير:", err);
-        lessonsData = [];
-    }
 
-    // 3. حساب عدد الفيديوهات الإجمالي بعد تجميعها من كل المجلدات
-    const videosCount = lessonsData.length;
+        const videosCount = lessonsData.length;
 
-    // 4. حساب إجمالي عدد المشاهدات الفعلي من الحقل القادم من السيرفر (views_count)
-    const totalViews = lessonsData.reduce((sum, lesson) => {
-        const views = lesson.views_count ?? lesson.views ?? lesson.watch_count ?? 0;
-        return sum + Number(views);
-    }, 0);
+        const totalViews = lessonsData.reduce((sum, lesson) => {
+            const views = lesson.views_count ?? lesson.views ?? lesson.watch_count ?? 0;
+            return sum + Number(views);
+        }, 0);
 
-    // 5. تحديد اسم الصف الدراسي
-    const gradeName = gradesList.find(g => g.id === course.grade)?.name || course.grade || 'غير محدد';
+        const gradeName = gradesList.find(g => g.id === course.grade)?.name || course.grade || 'غير محدد';
 
-    // 6. بناء بيانات التصدير
-    const excelData = [
-        {
-            "معرف الكورس (ID)": courseId,
-            "اسم الكورس": course.title,
-            "الصف الدراسي": gradeName,
-            "اسم الأستاذ": course.instructor_name || 'الأدمن',
-            "عدد الفيديوهات الإجمالي": videosCount,
-            "إجمالي المشاهدات لكافة الدروس": totalViews,
-            "تاريخ استخراج التقرير": new Date().toLocaleDateString('ar-EG')
-        }
-    ];
+        const excelData = [
+            {
+                "معرف الكورس (ID)": courseId,
+                "اسم الكورس": course.title,
+                "الصف الدراسي": gradeName,
+                "اسم الأستاذ": course.instructor_name || 'الأدمن',
+                "عدد الفيديوهات الإجمالي": videosCount,
+                "إجمالي المشاهدات لكافة الدروس": totalViews,
+                "تاريخ استخراج التقرير": new Date().toLocaleDateString('ar-EG')
+            }
+        ];
 
-    // 7. توليد وحفظ ملف الـ Excel
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    worksheet['!dir'] = 'rtl'; // دعم اللغة العربية
+        const worksheet = XLSX.utils.json_to_sheet(excelData);
+        const workbook = XLSX.utils.book_new();
+        worksheet['!dir'] = 'rtl'; 
 
-    XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات الكورس");
-    const fileName = `تقرير_كورس_${course.title.replace(/\s+/g, '_')}.xlsx`;
-    XLSX.writeFile(workbook, fileName);
-};
+        XLSX.utils.book_append_sheet(workbook, worksheet, "بيانات الكورس");
+        const fileName = `تقرير_كورس_${course.title.replace(/\s+/g, '_')}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+    };
+
     const handleDeleteCourse = async (id) => {
+        // حماية برمجية إضافية داخل الدالة
+        if (!isAdmin) {
+            alert("عذراً، لا تملك صلاحية حذف الكورسات.");
+            return;
+        }
+
         if (window.confirm("هل أنت متأكد من حذف هذا الكورس وكل محتوياته نهائياً؟")) {
             try {
                 await api.delete(`/courses/${id}`);
@@ -109,14 +110,9 @@ const AllContentManagement = () => {
         }
     };
 
-    // 🟢 تحسين عملية الفلترة: تشمل البحث + فلترة الصف الدراسي المختار
     const filteredCourses = courses.filter(course => {
-        const matchesSearch = course.title.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        // إذا كان التبويب المختار هو "الكل" نمرر الكورس، وإلا نتحقق من مطابقة حقل الـ grade
-        // (تأكدي أن الباك إيند يرسل حقل الكورس باسم grade أو قم بتغييره لـ grade_id حسب مسمياتك)
+        const matchesSearch = course.title?.toLowerCase().includes(searchTerm.toLowerCase());
         const matchesGrade = activeTab === 'all' || course.grade === activeTab; 
-
         return matchesSearch && matchesGrade;
     });
 
@@ -154,17 +150,20 @@ const AllContentManagement = () => {
                         />
                     </div>
 
-                    <button 
-                        onClick={() => navigate('/add-course')}
-                        className="bg-slate-900 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-95 shadow-lg"
-                    >
-                        <Plus size={22} />
-                        <span className="font-bold">كورس جديد</span>
-                    </button>
+                    {/* 🔥 تعديل 1: زر إضافة كورس جديد يظهر للأدمن فقط */}
+                    {isAdmin && (
+                        <button 
+                            onClick={() => navigate('/add-course')}
+                            className="bg-slate-900 text-white px-6 py-3 rounded-2xl flex items-center justify-center gap-2 hover:bg-black transition-all active:scale-95 shadow-lg"
+                        >
+                            <Plus size={22} />
+                            <span className="font-bold">كورس جديد</span>
+                        </button>
+                    )}
                 </div>
             </div>
 
-            {/* 🟢 قسم التبويبات (Tabs Navbar) لاختيار الصف الدراسي */}
+            {/* قسم التبويبات (Tabs Navbar) */}
             <div className="max-w-6xl mx-auto mb-8 bg-white p-2 rounded-2xl shadow-sm border border-slate-200/60 flex flex-wrap gap-1">
                 {gradesList.map((grade) => (
                     <button
@@ -178,7 +177,6 @@ const AllContentManagement = () => {
                     >
                         {grade.id === 'all' && <LayoutGrid size={16} />}
                         {grade.name}
-                        {/* عداد يوضح عدد الكورسات الموجودة داخل هذا الصف برقم صغير */}
                         <span className={`text-xs px-1.5 py-0.5 rounded-md ${activeTab === grade.id ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500'}`}>
                             {grade.id === 'all' 
                                 ? courses.length 
@@ -195,7 +193,6 @@ const AllContentManagement = () => {
                     <div className="bg-white p-20 rounded-[30px] border-2 border-dashed border-slate-200 text-center">
                         <Search className="text-slate-300 mx-auto mb-4" size={40} />
                         <h3 className="text-xl font-bold text-slate-700">لا توجد كورسات مضافة في هذا القسم!</h3>
-                        <p className="text-slate-400 text-sm mt-1">يمكنك إضافة أول كورس عبر زر "كورس جديد" بالأعلى</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 gap-5">
@@ -245,30 +242,36 @@ const AllContentManagement = () => {
                                         <span>الدروس</span>
                                     </button>
 
-                                    {/* زر التصدير */}
+                                    {/* زر التصدير (متاح للجميع: أدمن، موظف، أستاذ) */}
                                     <button 
                                         onClick={() => handleExportToExcel(course)}
                                         className="p-2.5 bg-orange-50 text-orange-600 rounded-xl hover:bg-orange-600 hover:text-white transition-all border border-orange-100"
-                                        title="تصدير بيانات الكورس"
+                                        title="تصدير بيانات الكورس لقفل ملف الـ Excel"
                                     >
                                         <Download size={20} />
                                     </button>
 
-                                    {/* زر التعديل */}
-                                    <button 
-                                        onClick={() => navigate(`/edit-course/${course.id}`)}
-                                        className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
-                                    >
-                                        <Pencil size={20} />
-                                    </button>
+                                    {/* 🔥 تعديل 2: زر التعديل يظهر للأدمن فقط */}
+                                    {isAdmin && (
+                                        <button 
+                                            onClick={() => navigate(`/edit-course/${course.id}`)}
+                                            className="p-2.5 bg-slate-100 text-slate-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
+                                            title="تعديل الكورس"
+                                        >
+                                            <Pencil size={20} />
+                                        </button>
+                                    )}
 
-                                    {/* زر الحذف */}
-                                    <button 
-                                        onClick={() => handleDeleteCourse(course.id)}
-                                        className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all"
-                                    >
-                                        <Trash2 size={20} />
-                                    </button>
+                                    {/* 🔥 تعديل 3: زر الحذف يظهر للأدمن فقط */}
+                                    {isAdmin && (
+                                        <button 
+                                            onClick={() => handleDeleteCourse(course.id)}
+                                            className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                                            title="حذف الكورس نهائياً"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    )}
                                 </div>
                             </div>
                         ))}
