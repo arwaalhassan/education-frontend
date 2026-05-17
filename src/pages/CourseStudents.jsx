@@ -12,13 +12,17 @@ import {
     X,
     PlayCircle,
     AlertCircle,
-    Ticket,     // تم إضافة أيقونة الكوبون
-    ShieldAlert  // تم إضافة أيقونة التسجيل اليدوي/الإداري
+    Ticket,     
+    ShieldAlert  
 } from 'lucide-react';
 
 const CourseStudents = () => {
     const { courseId } = useParams();
     const navigate = useNavigate();
+    
+    // تحديد رتبة المستخدم الحالية لتأمين العمليات الحساسة
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isAdmin = user && user.role === 'admin';
     
     // States القائمة الرئيسية
     const [students, setStudents] = useState([]);
@@ -42,10 +46,10 @@ const CourseStudents = () => {
             setLoading(true);
             setError(null);
             const res = await api.get(`/student/course/${courseId}/students`);
-            setStudents(res.data);
+            setStudents(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error("خطأ في جلب الطلاب:", err);
-            setError("تعذر تحميل قائمة الطلاب، تأكد من مسار السيرفر.");
+            setError("تعذر تحميل قائمة الطلاب، تأكد من الصلاحيات أو مسار السيرفر.");
         } finally {
             setLoading(false);
         }
@@ -58,7 +62,7 @@ const CourseStudents = () => {
             setIsLogsLoading(true);
             setShowLogsModal(true);
             const res = await api.get(`/student/course/${courseId}/student/${student.id}/logs`);
-            setSelectedStudentLogs(res.data);
+            setSelectedStudentLogs(Array.isArray(res.data) ? res.data : []);
         } catch (err) {
             console.error("خطأ في السجلات:", err);
             setSelectedStudentLogs([]);
@@ -67,14 +71,20 @@ const CourseStudents = () => {
         }
     };
 
-    // 3. إلغاء الاشتراك
+    // 3. إلغاء الاشتراك (محمي للأدمن فقط في الفرونت إند)
     const handleUnenroll = async (userId) => {
-        if (window.confirm("هل أنت متأكد؟")) {
+        if (!isAdmin) {
+            alert("عذراً، لا تملك صلاحية إلغاء اشتراك الطلاب.");
+            return;
+        }
+
+        if (window.confirm("هل أنت متأكد من إلغاء اشتراك هذا الطالب نهائياً من الكورس؟")) {
             try {
                 await api.post('/student/unenroll-student', { userId, courseId });
                 setStudents(students.filter(s => s.id !== userId));
+                alert("تم إلغاء الاشتراك بنجاح.");
             } catch (err) {
-                alert("حدث خطأ أثناء إلغاء الاشتراك");
+                alert(err.response?.data?.message || "حدث خطأ أثناء إلغاء الاشتراك");
             }
         }
     };
@@ -124,7 +134,7 @@ const CourseStudents = () => {
                     </div>
                 </div>
 
-                {/* Search & Actions */}
+                {/* Search Box */}
                 <div className="relative mb-6 group">
                     <Search className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-blue-500 transition-colors" size={22} />
                     <input 
@@ -156,7 +166,7 @@ const CourseStudents = () => {
                                         <tr>
                                             <th className="p-5 font-bold text-slate-600">اسم الطالب</th>
                                             <th className="p-5 font-bold text-slate-600">رقم الهاتف</th>
-                                            <th className="p-5 font-bold text-slate-600 text-center">نوع الاشتراك</th> {/* التعديل 1: رأس العمود الجديد */}
+                                            <th className="p-5 font-bold text-slate-600 text-center">نوع الاشتراك</th>
                                             <th className="p-5 font-bold text-slate-600 text-center">تاريخ الانضمام</th>
                                             <th className="p-5 font-bold text-slate-600 text-center">الإجراءات</th>
                                         </tr>
@@ -166,13 +176,12 @@ const CourseStudents = () => {
                                             <tr key={student.id} className="hover:bg-blue-50/20 transition-colors">
                                                 <td className="p-5">
                                                     <div className="font-bold text-slate-800">{student.full_name}</div>
-                                                    <div className="text-xs text-slate-400 mt-1">ID: #{student.id.toString().slice(-5)}</div>
+                                                    <div className="text-xs text-slate-400 mt-1">ID: #{student.id ? student.id.toString().slice(-5) : '---'}</div>
                                                 </td>
                                                 <td className="p-5 text-slate-600 font-mono tracking-tighter text-lg" dir="ltr">
-                                                    {student.phone}
+                                                    {student.phone || '---'}
                                                 </td>
                                                 
-                                                {/* التعديل 2: خلية عرض نوع الاشتراك عبر شارات ملونة */}
                                                 <td className="p-5 text-center">
                                                     {student.payment_type === 'coupon' ? (
                                                         <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
@@ -188,7 +197,7 @@ const CourseStudents = () => {
                                                 </td>
 
                                                 <td className="p-5 text-center text-slate-500 font-medium">
-                                                    {new Date(student.enrolled_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' })}
+                                                    {student.enrolled_at ? new Date(student.enrolled_at).toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' }) : '---'}
                                                 </td>
                                                 <td className="p-5">
                                                     <div className="flex items-center justify-center gap-3">
@@ -201,13 +210,16 @@ const CourseStudents = () => {
                                                             <span>النشاط</span>
                                                         </button>
 
-                                                        <button 
-                                                            onClick={() => handleUnenroll(student.id)}
-                                                            className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
-                                                            title="إلغاء اشتراك الطالب"
-                                                        >
-                                                            <UserMinus size={20} />
-                                                        </button>
+                                                        {/* 🔥 التعديل الأساسي: زر الحذف لا يظهر إلا للأدمن فقط لحماية البيانات */}
+                                                        {isAdmin && (
+                                                            <button 
+                                                                onClick={() => handleUnenroll(student.id)}
+                                                                className="p-2.5 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-all"
+                                                                title="إلغاء اشتراك الطالب"
+                                                            >
+                                                                <UserMinus size={20} />
+                                                            </button>
+                                                        )}
                                                     </div>
                                                 </td>
                                             </tr>
@@ -220,12 +232,11 @@ const CourseStudents = () => {
                 )}
             </div>
 
-            {/* Modal: سجل المشاهدات بتصميم حديث */}
+            {/* Modal: سجل المشاهدات */}
             {showLogsModal && (
-                <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex justify-center items-center z-50 p-4 animate-in fade-in duration-300">
-                    <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl transition-transform animate-in zoom-in-95 duration-300">
+                <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex justify-center items-center z-50 p-4">
+                    <div className="bg-white rounded-[32px] w-full max-w-2xl max-h-[85vh] overflow-hidden flex flex-col shadow-2xl">
                         
-                        {/* Modal Header */}
                         <div className="p-6 border-b border-slate-100 flex justify-between items-center">
                             <div className="flex items-center gap-3 text-right">
                                 <div className="w-12 h-12 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200">
@@ -244,8 +255,7 @@ const CourseStudents = () => {
                             </button>
                         </div>
                         
-                        {/* Modal Content */}
-                        <div className="p-6 overflow-y-auto bg-slate-50/30 custom-scrollbar">
+                        <div className="p-6 overflow-y-auto bg-slate-50/30">
                             {isLogsLoading ? (
                                 <div className="flex flex-col items-center justify-center p-20">
                                     <Loader2 className="animate-spin text-blue-600 mb-4" size={40} />
@@ -257,7 +267,6 @@ const CourseStudents = () => {
                                         <PlayCircle size={40} />
                                     </div>
                                     <p className="text-slate-500 text-lg font-bold">لم يتم تسجيل أي نشاط مشاهدة بعد</p>
-                                    <p className="text-slate-400 text-sm mt-1">تظهر السجلات بمجرد بدء الطالب في متابعة الدروس.</p>
                                 </div>
                             ) : (
                                 <div className="grid gap-4">
@@ -277,7 +286,7 @@ const CourseStudents = () => {
                                                     <div className="flex items-center gap-4">
                                                         <span className="text-xs text-slate-400 flex items-center gap-1 font-medium">
                                                             <Clock size={14} className="text-blue-400" /> 
-                                                            {new Date(log.watched_at).toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' })}
+                                                            {log.watched_at ? new Date(log.watched_at).toLocaleString('ar-EG', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: 'short' }) : '---'}
                                                         </span>
                                                         {log.watch_count > 1 && (
                                                             <span className="text-[10px] bg-amber-50 text-amber-600 px-2 py-0.5 rounded-lg font-black border border-amber-100">
@@ -296,11 +305,10 @@ const CourseStudents = () => {
                             )}
                         </div>
 
-                        {/* Modal Footer */}
                         <div className="p-5 bg-white border-t border-slate-50 text-center">
                             <button 
                                 onClick={() => setShowLogsModal(false)}
-                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all shadow-xl shadow-slate-200 active:scale-95"
+                                className="w-full py-4 bg-slate-900 text-white rounded-2xl font-black hover:bg-slate-800 transition-all shadow-xl shadow-slate-200"
                             >
                                 إغلاق السجل
                             </button>
